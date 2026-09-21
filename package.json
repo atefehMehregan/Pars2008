@@ -1,0 +1,28 @@
+{
+  "name": "pars2008",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "2008Pars — Peugeot 2008 spare parts store (Persian, RTL)",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "migrate": "node src/db/migrate.js",
+    "test": "node --test \"tests/**/*.test.js\"",
+    "check:sharp": "node scripts/check-sharp.js"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.7",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.2.0",
+    "nunjucks": "^3.2.4",
+    "pg": "^8.23.0",
+    "sharp": "^0.35.4"
+  },
+  "dependencies_note": "argon2 is added in the auth phase; it is a native build and is not needed for Phase 0."
+}

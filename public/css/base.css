@@ -1,0 +1,139 @@
+/* ============================================================================
+ * base.css — پایه فنی چیدمان
+ * ----------------------------------------------------------------------------
+ * فاز ۰: فقط یک پایه تمیز و واکنش‌گرا. طراحی بصری نهایی، رنگ‌ها، فونت‌ها و
+ * هویت برند در فاز طراحی تعیین می‌شوند. اینجا عمدا خنثی است.
+ *
+ * از ویژگی‌های منطقی (inline-start/end) استفاده می‌شود، نه left/right،
+ * تا چیدمان راست‌به‌چپ بدون استثنا کار کند.
+ * ==========================================================================*/
+
+:root {
+  --ground: #ffffff;
+  --surface: #f6f6f5;
+  --ink: #1b1b1a;
+  --muted: #5f5c58;
+  --line: #e2e0dc;
+  --accent: #14505a;
+
+  --container: 1200px;
+  --gap: 1rem;
+  --gap-lg: 2rem;
+  --radius: 6px;
+
+  /* فونت فارسی در فاز طراحی انتخاب می‌شود؛ فعلا فونت سیستم. */
+  --font: system-ui, 'Segoe UI', Tahoma, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background-color: var(--ground);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 1rem;
+  line-height: 1.8;
+}
+
+/* ارقام و شماره فنی همیشه هم‌عرض، تا ستون‌های عددی تکان نخورند */
+.num, .part-number { font-variant-numeric: tabular-nums; }
+.part-number { font-family: ui-monospace, 'Consolas', monospace; letter-spacing: 0.02em; }
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--gap);
+}
+
+.skip-link {
+  position: absolute;
+  inset-inline-start: -9999px;
+}
+.skip-link:focus {
+  inset-inline-start: var(--gap);
+  top: var(--gap);
+  z-index: 10;
+  padding: 0.6rem 1rem;
+  background: var(--ink);
+  color: var(--ground);
+  border-radius: var(--radius);
+}
+
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ------------------------------------------------------------------ هدر */
+.site-header { border-bottom: 1px solid var(--line); }
+.site-header__bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap);
+  min-height: 64px;
+  flex-wrap: wrap;
+}
+.brand { display: flex; align-items: baseline; gap: 0.5rem; text-decoration: none; color: inherit; }
+.brand__name { font-weight: 700; font-size: 1.15rem; }
+.brand__latin { font-size: 0.8rem; letter-spacing: 0.14em; color: var(--muted); }
+
+.site-nav__list { display: flex; gap: var(--gap); list-style: none; margin: 0; padding: 0; }
+.site-nav a { color: var(--muted); text-decoration: none; }
+.site-nav a:hover { color: var(--accent); }
+
+/* ---------------------------------------------------------------- محتوا */
+.section { padding-block: var(--gap-lg); }
+.eyebrow {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.page-title { margin: 0 0 0.75rem; font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem); text-wrap: balance; }
+.lede { margin: 0 0 var(--gap-lg); max-width: 62ch; color: var(--muted); }
+.note { margin-top: var(--gap-lg); font-size: 0.9rem; color: var(--muted); }
+code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
+
+.facts {
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.facts__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap);
+  padding: 0.75rem var(--gap);
+  border-bottom: 1px solid var(--line);
+}
+.facts__row:last-child { border-bottom: 0; }
+.facts dt { color: var(--muted); margin: 0; }
+.facts dd { margin: 0; font-weight: 500; }
+
+.btn {
+  display: inline-block;
+  padding: 0.6rem 1.2rem;
+  background: var(--accent);
+  color: #fff;
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+
+/* ----------------------------------------------------------------- فوتر */
+.site-footer {
+  margin-top: var(--gap-lg);
+  padding-block: var(--gap-lg);
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ------------------------------------------------------------ موبایل */
+@media (max-width: 640px) {
+  .facts__row { flex-direction: column; gap: 0.2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}

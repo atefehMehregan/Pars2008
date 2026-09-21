@@ -1,0 +1,35 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <p class="eyebrow">فاز ۰ — پایه فنی</p>
+    <h1 class="page-title">{{ tagline }}</h1>
+    <p class="lede">
+      این صفحه فقط برای تأیید پایه فنی است: زبان فارسی، جهت راست‌به‌چپ،
+      رمزگذاری UTF-8 و چیدمان واکنش‌گرا. طراحی و محتوای واقعی فروشگاه در
+      فازهای بعد ساخته می‌شود.
+    </p>
+
+    <dl class="facts">
+      <div class="facts__row">
+        <dt>نمونه قیمت</dt>
+        <dd class="num">{{ 12500000 | toman }}</dd>
+      </div>
+      <div class="facts__row">
+        <dt>نمونه رقم فارسی</dt>
+        <dd class="num">{{ "1403" | faDigits }}</dd>
+      </div>
+      <div class="facts__row">
+        <dt>نمونه شماره فنی</dt>
+        <dd><bdi class="part-number">9678191580</bdi></dd>
+      </div>
+    </dl>
+
+    <p class="note">
+      شماره‌های فنی داخل متن فارسی با <code>&lt;bdi&gt;</code> محصور می‌شوند تا
+      جهت‌شان در چیدمان راست‌به‌چپ به‌هم نریزد.
+    </p>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "layouts/base.njk" %}
+{% block content %}
+<section class="section">
+  <div class="container">
+    <h1 class="page-title">خطای سرور</h1>
+    <p class="lede">مشکلی پیش آمد. لطفا بعدا دوباره تلاش کنید.</p>
+    {% if ref %}<p class="note">کد پیگیری: <bdi class="part-number">{{ ref }}</bdi></p>{% endif %}
+  </div>
+</section>
+{% endblock %}

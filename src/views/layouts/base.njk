@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="{{ metaDescription | default('فروشگاه اینترنتی قطعات یدکی پژو ۲۰۰۸') }}" />
+    <title>{{ title }} | {{ storeName }}</title>
+    <link rel="stylesheet" href="/css/base.css" />
+  </head>
+
+  <body>
+    <a class="skip-link" href="#main">پرش به محتوای اصلی</a>
+
+    <header class="site-header">
+      <div class="container site-header__bar">
+        <a class="brand" href="/">
+          <span class="brand__name">{{ storeName }}</span>
+          <span class="brand__latin">{{ storeNameLatin }}</span>
+        </a>
+        <nav class="site-nav" aria-label="ناوبری اصلی">
+          <ul class="site-nav__list">
+            <li><a href="/">خانه</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <p>© <span class="num">{{ year | faDigits }}</span> {{ storeName }}</p>
+      </div>
+    </footer>
+  </body>
+</html>
