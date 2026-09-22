@@ -144,6 +144,9 @@ export function createApp({ repositories = productionRepositories, db = null } =
     authService: adminAuthService,
     audit: adminAudit,
     loginLimiter,
+    /* همان مخزن‌هایی که کاتالوگ عمومی استفاده می‌کند — از همان مسیر
+       تزریق. بخش مدیر لایهٔ دسترسی به دادهٔ جداگانه‌ای نمی‌سازد. */
+    repositories,
   }));
 
   app.use(notFound);
