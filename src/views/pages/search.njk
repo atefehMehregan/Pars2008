@@ -1,0 +1,43 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+<section class="section">
+  <div class="container listing">
+    {% include "partials/listing-sidebar.njk" %}
+
+    <div class="listing__main">
+      <header class="listing__head">
+        <h1 class="page-title">
+          {% if term %}نتیجهٔ جست‌وجو{% else %}جست‌وجو{% endif %}
+        </h1>
+        {% if term %}
+          <p class="listing__count">
+            <span class="num">{{ result.total | faDigits }}</span> نتیجه برای «{{ term }}»
+          </p>
+        {% endif %}
+      </header>
+
+      {% if result.matchedBy == 'part_number' %}
+        <p class="note">نتیجه بر اساس شماره فنی یا کد کالا پیدا شد.</p>
+      {% endif %}
+
+      {% if result.items.length %}
+        <div class="product-grid">
+          {% for item in result.items %}{% include "partials/product-card.njk" %}{% endfor %}
+        </div>
+        {% include "partials/pagination.njk" %}
+      {% elif term %}
+        {% set emptyTitle = 'چیزی پیدا نشد' %}
+        {% set emptyText = 'نام قطعه یا شماره فنی را دوباره بررسی کنید. می‌توانید شماره فنی را با یا بدون خط تیره وارد کنید.' %}
+        {% set emptyActionUrl = '/products' %}
+        {% set emptyActionLabel = 'دیدن همهٔ محصولات' %}
+        {% include "partials/empty-state.njk" %}
+      {% else %}
+        {% set emptyTitle = 'چه قطعه‌ای لازم دارید؟' %}
+        {% set emptyText = 'نام قطعه، کد کالا یا شماره فنی روی قطعه را در کادر بالا بنویسید.' %}
+        {% include "partials/empty-state.njk" %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

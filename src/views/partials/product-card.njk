@@ -1,0 +1,53 @@
+{# کارت محصول — در فهرست، دسته، برند و جست‌وجو یکسان است. #}
+<article class="product-card">
+  <a class="product-card__link" href="/product/{{ item.slug | urlencode }}">
+    <div class="product-card__media">
+      {% if item.primary_image_id %}
+        <picture>
+          <source type="image/webp" srcset="/media/products/{{ item.primary_image_id }}/card.webp" />
+          <img src="/media/products/{{ item.primary_image_id }}/card.jpg"
+               alt="{{ item.name }}" width="400" height="400" loading="lazy" />
+        </picture>
+      {% else %}
+        {# تصویری هنوز بارگذاری نشده — جای آن نگه داشته می‌شود تا چیدمان نپرد. #}
+        <div class="product-card__placeholder" aria-hidden="true"></div>
+      {% endif %}
+
+      {% if item.sale_price_toman %}
+        <span class="badge badge--sale">حراج</span>
+      {% elif item.is_new %}
+        <span class="badge badge--new">جدید</span>
+      {% endif %}
+    </div>
+
+    <div class="product-card__body">
+      {% if item.brand_name %}<p class="product-card__brand">{{ item.brand_name }}</p>{% endif %}
+      <h3 class="product-card__name">{{ item.name }}</h3>
+
+      {% if item.oem_number %}
+        <p class="product-card__oem">شماره فنی: <bdi class="part-number">{{ item.oem_number }}</bdi></p>
+      {% endif %}
+
+      <div class="product-card__foot">
+        <div class="price">
+          {% if item.sale_price_toman %}
+            <strong class="price__now num">{{ item.sale_price_toman | toman }}</strong>
+            <del class="price__old num">{{ item.price_toman | tomanPlain }}</del>
+          {% else %}
+            <strong class="price__now num">{{ item.price_toman | toman }}</strong>
+          {% endif %}
+        </div>
+
+        {% if item.availability == 'in_stock' %}
+          <span class="stock stock--in">موجود</span>
+        {% elif item.availability == 'on_order' %}
+          <span class="stock stock--order">قابل سفارش</span>
+        {% elif item.availability == 'discontinued' %}
+          <span class="stock stock--out">تولید متوقف شده</span>
+        {% else %}
+          <span class="stock stock--out">ناموجود</span>
+        {% endif %}
+      </div>
+    </div>
+  </a>
+</article>

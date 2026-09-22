@@ -1,0 +1,8 @@
+{# حالت خالی. پیام باید بگوید چه اتفاقی افتاده، نه فقط «چیزی نیست». #}
+<div class="empty-state">
+  <h2 class="empty-state__title">{{ emptyTitle }}</h2>
+  {% if emptyText %}<p class="empty-state__text">{{ emptyText }}</p>{% endif %}
+  {% if emptyActionUrl %}
+    <p><a class="btn" href="{{ emptyActionUrl }}">{{ emptyActionLabel }}</a></p>
+  {% endif %}
+</div>

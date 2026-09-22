@@ -1,0 +1,130 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+<section class="section">
+  <div class="container">
+    <nav class="breadcrumb" aria-label="مسیر صفحه">
+      <a href="/">خانه</a> <span aria-hidden="true">/</span>
+      <a href="/products">محصولات</a> <span aria-hidden="true">/</span>
+      <a href="/category/{{ product.category_slug | urlencode }}">{{ product.category_name }}</a>
+      <span aria-hidden="true">/</span>
+      <span>{{ product.name }}</span>
+    </nav>
+
+    <div class="product-detail">
+      {# ---------------------------------------------------------- گالری #}
+      <div class="product-detail__media">
+        {% if images.length %}
+          {% set main = images[0] %}
+          <picture>
+            <source type="image/webp" srcset="/media/products/{{ main.image_id }}/detail.webp" />
+            <img class="product-detail__image"
+                 src="/media/products/{{ main.image_id }}/detail.jpg"
+                 alt="{{ main.alt_text or product.name }}"
+                 width="800" height="800" />
+          </picture>
+
+          {% if images.length > 1 %}
+            <ul class="thumb-list">
+              {% for img in images %}
+                <li>
+                  <picture>
+                    <source type="image/webp" srcset="/media/products/{{ img.image_id }}/thumb.webp" />
+                    <img src="/media/products/{{ img.image_id }}/thumb.jpg"
+                         alt="{{ img.alt_text or product.name }}"
+                         width="160" height="160" loading="lazy" />
+                  </picture>
+                </li>
+              {% endfor %}
+            </ul>
+          {% endif %}
+        {% else %}
+          <div class="product-detail__placeholder" aria-hidden="true"></div>
+          <p class="note">تصویر این محصول هنوز بارگذاری نشده است.</p>
+        {% endif %}
+      </div>
+
+      {# ----------------------------------------------------------- متن #}
+      <div class="product-detail__body">
+        {% if product.brand_name %}
+          <p class="product-detail__brand">
+            <a href="/brand/{{ product.brand_slug | urlencode }}">{{ product.brand_name }}</a>
+          </p>
+        {% endif %}
+
+        <h1 class="page-title">{{ product.name }}</h1>
+
+        {% if product.short_description %}
+          <p class="lede">{{ product.short_description }}</p>
+        {% endif %}
+
+        <div class="product-detail__price">
+          {% if product.sale_price_toman %}
+            <strong class="price__now num">{{ product.sale_price_toman | toman }}</strong>
+            <del class="price__old num">{{ product.price_toman | tomanPlain }}</del>
+            {% if discountPercent > 0 %}
+              <span class="badge badge--sale num">{{ discountPercent | faDigits }}٪ تخفیف</span>
+            {% endif %}
+          {% else %}
+            <strong class="price__now num">{{ product.price_toman | toman }}</strong>
+          {% endif %}
+        </div>
+
+        <dl class="spec-table">
+          <div class="spec-table__row">
+            <dt>کد کالا</dt>
+            <dd><bdi class="part-number">{{ product.sku }}</bdi></dd>
+          </div>
+          {% if product.oem_number %}
+            <div class="spec-table__row">
+              <dt>شماره فنی</dt>
+              <dd><bdi class="part-number">{{ product.oem_number }}</bdi></dd>
+            </div>
+          {% endif %}
+          <div class="spec-table__row">
+            <dt>وضعیت</dt>
+            <dd>
+              {% if product.availability == 'in_stock' %}موجود
+              {% elif product.availability == 'on_order' %}قابل سفارش
+              {% elif product.availability == 'discontinued' %}تولید متوقف شده
+              {% else %}ناموجود{% endif %}
+            </dd>
+          </div>
+          {% for s in specs %}
+            <div class="spec-table__row">
+              <dt>{{ s.key }}</dt>
+              <dd>{{ s.value }}</dd>
+            </div>
+          {% endfor %}
+        </dl>
+
+        {% if product.compatibility_note or vehicles.length %}
+          <section class="compat">
+            <h2 class="compat__title">سازگاری</h2>
+            {% if product.compatibility_note %}
+              <p>{{ product.compatibility_note }}</p>
+            {% endif %}
+            {% if vehicles.length %}
+              <ul class="compat__list">
+                {% for v in vehicles %}
+                  <li>{{ v.display_name }}{% if v.note %} — {{ v.note }}{% endif %}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+          </section>
+        {% endif %}
+
+        {# سبد خرید در فاز بعد اضافه می‌شود. اینجا عمدا دکمه‌ای نیست تا
+           چیزی که کار نمی‌کند به کاربر نشان داده نشود. #}
+      </div>
+    </div>
+
+    {% if product.description %}
+      <section class="product-description">
+        <h2>توضیحات</h2>
+        <p>{{ product.description }}</p>
+      </section>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

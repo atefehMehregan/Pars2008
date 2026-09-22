@@ -15,9 +15,20 @@ import { extraSecurityHeaders, csrfToken, notFound, errorHandler } from './middl
 import { generalLimiter } from './middleware/rateLimit.js';
 import { healthRouter } from './routes/health.js';
 import { pageRouter } from './routes/pages.js';
+import { createCatalogRouter } from './routes/catalog.js';
+import * as productionRepositories from './db/repositories/index.js';
 import { faDigits, formatToman, formatJalali } from './services/format.js';
 
-export function createApp() {
+/**
+ * ساخت برنامه.
+ *
+ * @param {object} [options]
+ * @param {object} [options.repositories] مخزن‌ها. پیش‌فرض، مخزن‌های
+ *   سیم‌کشی‌شده به استخر اتصال تولید. آزمون‌ها اینجا یک مجموعهٔ
+ *   PGlite تزریق می‌کنند — همان الگوی فاز ۱الف، تا لایهٔ اتصال
+ *   تولید (src/db/index.js) دست‌نخورده بماند.
+ */
+export function createApp({ repositories = productionRepositories } = {}) {
   const app = express();
 
   /* پشت پراکسی (IIS/ARR یا Nginx) آی‌پی واقعی در X-Forwarded-For است. */
@@ -43,6 +54,10 @@ export function createApp() {
      تبدیل فقط در لحظه نمایش انجام می‌شود. */
   njk.addFilter('faDigits', faDigits);
   njk.addFilter('toman', formatToman);
+  /* Nunjucks آرگومان فیلتر را موضعی می‌دهد، نه به‌صورت شیء گزینه‌ها،
+     پس «toman(false)» به formatToman یک boolean می‌رساند و بی‌اثر می‌ماند.
+     یک فیلتر جداگانه صریح‌تر از هوشمندبازی در خود تابع است. */
+  njk.addFilter('tomanPlain', (value) => formatToman(value, { withUnit: false }));
   njk.addFilter('jalali', formatJalali);
 
   /* ------------------------------------------------------- میان‌افزارها */
@@ -106,6 +121,7 @@ export function createApp() {
   /* ------------------------------------------------------------ مسیرها */
   app.use('/', healthRouter);
   app.use('/', pageRouter);
+  app.use('/', createCatalogRouter(repositories));
 
   app.use(notFound);
   app.use(errorHandler);

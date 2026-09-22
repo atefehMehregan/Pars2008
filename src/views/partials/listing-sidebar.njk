@@ -1,0 +1,34 @@
+{# نوار کناری فهرست: دسته‌ها و برندها با تعداد محصول. #}
+<aside class="listing-sidebar" aria-label="فیلترها">
+  <section class="filter-group">
+    <h2 class="filter-group__title">دسته‌بندی‌ها</h2>
+    {% if categoryList.length %}
+      <ul class="filter-list">
+        {% for c in categoryList %}
+          <li>
+            <a href="/category/{{ c.slug | urlencode }}">{{ c.name }}</a>
+            <span class="filter-list__count num">{{ c.product_count | faDigits }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="filter-group__empty">هنوز دسته‌بندی‌ای ثبت نشده است.</p>
+    {% endif %}
+  </section>
+
+  <section class="filter-group">
+    <h2 class="filter-group__title">برندها</h2>
+    {% if brandList.length %}
+      <ul class="filter-list">
+        {% for b in brandList %}
+          <li>
+            <a href="/brand/{{ b.slug | urlencode }}">{{ b.name }}</a>
+            <span class="filter-list__count num">{{ b.product_count | faDigits }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="filter-group__empty">هنوز برندی ثبت نشده است.</p>
+    {% endif %}
+  </section>
+</aside>

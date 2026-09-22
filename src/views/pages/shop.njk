@@ -1,0 +1,35 @@
+{% extends "layouts/base.njk" %}
+
+{% block content %}
+<section class="section">
+  <div class="container listing">
+    {% include "partials/listing-sidebar.njk" %}
+
+    <div class="listing__main">
+      <header class="listing__head">
+        <h1 class="page-title">{{ heading }}</h1>
+        <p class="listing__count">
+          <span class="num">{{ result.total | faDigits }}</span> محصول
+        </p>
+      </header>
+
+      {% if result.items.length %}
+        <div class="product-grid">
+          {% for item in result.items %}{% include "partials/product-card.njk" %}{% endfor %}
+        </div>
+        {% include "partials/pagination.njk" %}
+      {% elif catalogueEmpty %}
+        {% set emptyTitle = 'هنوز محصولی ثبت نشده است' %}
+        {% set emptyText = 'کاتالوگ در حال آماده‌سازی است. به‌زودی محصولات اینجا نمایش داده می‌شوند.' %}
+        {% include "partials/empty-state.njk" %}
+      {% else %}
+        {% set emptyTitle = 'محصولی با این فیلترها پیدا نشد' %}
+        {% set emptyText = 'فیلترها را بردارید یا دستهٔ دیگری را ببینید.' %}
+        {% set emptyActionUrl = '/products' %}
+        {% set emptyActionLabel = 'دیدن همهٔ محصولات' %}
+        {% include "partials/empty-state.njk" %}
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endblock %}

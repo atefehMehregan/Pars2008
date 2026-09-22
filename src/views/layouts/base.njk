@@ -17,9 +17,18 @@
           <span class="brand__name">{{ storeName }}</span>
           <span class="brand__latin">{{ storeNameLatin }}</span>
         </a>
+        <form class="site-search" action="/search" method="get" role="search">
+          <label class="sr-only" for="site-search-input">جست‌وجوی قطعه</label>
+          <input class="site-search__input" id="site-search-input" type="search" name="q"
+                 value="{{ term | default('') }}"
+                 placeholder="نام قطعه، کد کالا یا شماره فنی" />
+          <button class="site-search__button" type="submit">جست‌وجو</button>
+        </form>
+
         <nav class="site-nav" aria-label="ناوبری اصلی">
           <ul class="site-nav__list">
             <li><a href="/">خانه</a></li>
+            <li><a href="/products">محصولات</a></li>
           </ul>
         </nav>
       </div>

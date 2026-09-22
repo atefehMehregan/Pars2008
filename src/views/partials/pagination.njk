@@ -1,0 +1,28 @@
+{# نوار صفحه‌بندی. شماره‌ها با فیلتر faDigits فارسی می‌شوند. #}
+{% if pagination %}
+<nav class="pagination" aria-label="صفحه‌بندی نتایج">
+  <ul class="pagination__list">
+    {% if pagination.hasPrev %}
+      <li><a class="pagination__link" href="{{ pagination.prevUrl }}" rel="prev">قبلی</a></li>
+    {% endif %}
+
+    {% for p in pagination.pages %}
+      <li>
+        {% if p.isCurrent %}
+          <span class="pagination__link is-current num" aria-current="page">{{ p.number | faDigits }}</span>
+        {% else %}
+          <a class="pagination__link num" href="{{ p.url }}">{{ p.number | faDigits }}</a>
+        {% endif %}
+      </li>
+    {% endfor %}
+
+    {% if pagination.hasNext %}
+      <li><a class="pagination__link" href="{{ pagination.nextUrl }}" rel="next">بعدی</a></li>
+    {% endif %}
+  </ul>
+  <p class="pagination__summary">
+    صفحهٔ <span class="num">{{ pagination.page | faDigits }}</span>
+    از <span class="num">{{ pagination.pageCount | faDigits }}</span>
+  </p>
+</nav>
+{% endif %}
