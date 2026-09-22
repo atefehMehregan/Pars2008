@@ -18,7 +18,15 @@ process.env.NODE_ENV = 'test';
 test('همهٔ مهاجرت‌ها اعمال می‌شوند و شش جدول کاتالوگ ساخته می‌شود', async () => {
   const db = await createTestDb();
   try {
-    assert.deepEqual(db.appliedMigrations, ['001_extensions.sql', '002_catalog.sql']);
+    /* در برابر فهرست واقعی پوشهٔ مهاجرت‌ها سنجیده می‌شود، نه یک آرایهٔ
+       سخت‌کدشده: هم با افزوده شدن مهاجرت تازه نمی‌شکند، هم سخت‌گیرانه‌تر
+       است چون *همهٔ* مهاجرت‌ها باید اعمال شده باشند. */
+    const { listMigrationFiles } = await import('../src/db/migrate.js');
+    const { ROOT } = await import('../src/config/index.js');
+    const path = (await import('node:path')).default;
+    const expected = listMigrationFiles(path.join(ROOT, 'migrations'));
+    assert.ok(expected.length >= 3, 'باید دست‌کم سه مهاجرت وجود داشته باشد');
+    assert.deepEqual(db.appliedMigrations, expected);
 
     const res = await db.query(
       `SELECT table_name FROM information_schema.tables

@@ -85,6 +85,24 @@ export const config = {
     maxAgeDays: int('SESSION_DAYS', 30),
   },
 
+  /* ---------------------------------------------------------- مدیر --
+     نشست مدیر عمدا از نشست مشتری جداست: کوکی جدا، نام جدا، و عمر بسیار
+     کوتاه‌تر. SESSION_DAYS (۳۰ روز) برای حساب مشتری است و هرگز نباید
+     ورود مدیر را اداره کند. */
+  admin: {
+    cookieName: process.env.ADMIN_COOKIE_NAME || 'pars_admin_session',
+    /* کوکی مدیر فقط زیر /admin فرستاده می‌شود، پس روی صفحه‌های عمومی
+       کاتالوگ اصلا روی سیم نمی‌رود. */
+    cookiePath: '/admin',
+    absoluteHours: int('ADMIN_SESSION_ABSOLUTE_HOURS', 12),
+    idleMinutes: int('ADMIN_SESSION_IDLE_MINUTES', 60),
+    lockout: {
+      maxPerIdentifier: int('ADMIN_LOGIN_MAX_PER_IDENTIFIER', 5),
+      maxPerIp: int('ADMIN_LOGIN_MAX_PER_IP', 20),
+      windowMinutes: int('ADMIN_LOGIN_WINDOW_MINUTES', 15),
+    },
+  },
+
   /* پارامترهای Argon2id — مطابق راهنمای OWASP. */
   argon: {
     memoryCost: int('ARGON_MEMORY_KIB', 19_456), // 19 MiB
@@ -140,10 +158,12 @@ export const config = {
   },
 };
 
-/* در تولید، نبود این‌ها باید همان لحظه راه‌اندازی خطا بدهد. */
+/* در تولید، نبود این‌ها باید همان لحظه راه‌اندازی خطا بدهد.
+   SESSION_SECRET اینجا نیست و لازم نیست: نشست مدیر با توکن تصادفیِ
+   مات کار می‌کند که فقط هش SHA-256 آن ذخیره می‌شود. چیزی امضا نمی‌شود،
+   پس رازی برای امضا کردن هم لازم نیست. */
 if (isProd) {
   required('DATABASE_URL');
-  required('SESSION_SECRET');
 }
 
 /* بیرون از تولید هم بدون رشته اتصال نمی‌شود به پایگاه داده وصل شد.

@@ -12,9 +12,11 @@
     "dev": "node --watch src/server.js",
     "migrate": "node src/db/migrate.js",
     "test": "node --test \"tests/**/*.test.js\"",
-    "check:sharp": "node scripts/check-sharp.js"
+    "check:sharp": "node scripts/check-sharp.js",
+    "admin:create": "node scripts/create-admin.js"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.2.1",
     "cookie-parser": "^1.4.7",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
@@ -24,7 +26,6 @@
     "pg": "^8.23.0",
     "sharp": "^0.35.4"
   },
-  "dependencies_note": "argon2 is added in the auth phase; it is a native build and is not needed for Phase 0.",
   "devDependencies": {
     "@electric-sql/pglite": "^0.5.8"
   }
