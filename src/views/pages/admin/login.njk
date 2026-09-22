@@ -1,0 +1,30 @@
+{% extends "layouts/admin.njk" %}
+
+{% block content %}
+<section class="admin-login">
+  <h1 class="admin-login__title">ورود به بخش مدیریت</h1>
+
+  {% if error %}
+    <p class="admin-login__error" role="alert">{{ error }}</p>
+  {% endif %}
+
+  <form class="admin-login__form" action="/admin/login" method="post">
+    {# CSRF عمومی و بدون‌حالت: در این لحظه هنوز نشست مدیری وجود ندارد. #}
+    <input type="hidden" name="_csrf" value="{{ csrfToken }}" />
+
+    <div class="field">
+      <label class="field__label" for="email">ایمیل</label>
+      <input class="field__input" id="email" name="email" type="email"
+             value="{{ email }}" autocomplete="username" required />
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="password">رمز عبور</label>
+      <input class="field__input" id="password" name="password" type="password"
+             autocomplete="current-password" required />
+    </div>
+
+    <button class="btn btn--block" type="submit">ورود</button>
+  </form>
+</section>
+{% endblock %}

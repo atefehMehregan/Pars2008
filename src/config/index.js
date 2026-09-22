@@ -91,6 +91,7 @@ export const config = {
      ورود مدیر را اداره کند. */
   admin: {
     cookieName: process.env.ADMIN_COOKIE_NAME || 'pars_admin_session',
+    csrfCookieName: process.env.ADMIN_CSRF_COOKIE_NAME || 'pars_admin_csrf',
     /* کوکی مدیر فقط زیر /admin فرستاده می‌شود، پس روی صفحه‌های عمومی
        کاتالوگ اصلا روی سیم نمی‌رود. */
     cookiePath: '/admin',

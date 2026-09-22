@@ -1,0 +1,34 @@
+{% extends "layouts/admin.njk" %}
+
+{% block content %}
+<section class="admin-section">
+  <h1 class="admin-title">پیشخان</h1>
+  <p class="admin-lede">
+    خوش آمدید{% if admin.displayName %}، {{ admin.displayName }}{% endif %}.
+    مدیریت کاتالوگ در فاز بعد اضافه می‌شود.
+  </p>
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">آخرین فعالیت</h2>
+    {% if recentActivity.length %}
+      <table class="admin-table">
+        <thead>
+          <tr><th>رویداد</th><th>کاربر</th><th>نشانی شبکه</th><th>زمان</th></tr>
+        </thead>
+        <tbody>
+          {% for row in recentActivity %}
+            <tr>
+              <td><bdi class="part-number">{{ row.action }}</bdi></td>
+              <td>{{ row.admin_email or '—' }}</td>
+              <td><bdi class="part-number">{{ row.ip or '—' }}</bdi></td>
+              <td>{{ row.created_at | jalali(true) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="admin-panel__empty">هنوز فعالیتی ثبت نشده است.</p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

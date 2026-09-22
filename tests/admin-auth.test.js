@@ -10,17 +10,19 @@
 import test, { before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import crypto from 'node:crypto';
-import { createTestDb } from './helpers/testDb.js';
-import { createAdminUserRepository } from '../src/db/repositories/adminUsers.js';
-import { createAdminSessionRepository } from '../src/db/repositories/adminSessions.js';
-import { createLoginAttemptRepository } from '../src/db/repositories/loginAttempts.js';
-import { createAuditLog, AUDIT_ACTIONS } from '../src/services/audit.js';
-import { createAdminAuthService } from '../src/services/adminAuth.js';
-import { hashPassword, verifyPassword, verifyDummy, passwordAlgorithmInfo } from '../src/services/password.js';
-import { sha256 } from '../src/middleware/security.js';
-import { config } from '../src/config/index.js';
 
+/* NODE_ENV پیش از بار شدن config — ببینید توضیح در admin-routes.test.js. */
 process.env.NODE_ENV = 'test';
+
+const { createTestDb } = await import('./helpers/testDb.js');
+const { createAdminUserRepository } = await import('../src/db/repositories/adminUsers.js');
+const { createAdminSessionRepository } = await import('../src/db/repositories/adminSessions.js');
+const { createLoginAttemptRepository } = await import('../src/db/repositories/loginAttempts.js');
+const { createAuditLog, AUDIT_ACTIONS } = await import('../src/services/audit.js');
+const { createAdminAuthService } = await import('../src/services/adminAuth.js');
+const { hashPassword, verifyPassword, verifyDummy, passwordAlgorithmInfo } = await import('../src/services/password.js');
+const { sha256 } = await import('../src/middleware/security.js');
+const { config } = await import('../src/config/index.js');
 
 const PASSWORD = 'correct-horse-9-battery';
 let db, adminUsers, adminSessions, loginAttempts, audit, auth;

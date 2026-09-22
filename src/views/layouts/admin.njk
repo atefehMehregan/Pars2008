@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>{{ title }} | مدیریت {{ storeName }}</title>
+    <link rel="stylesheet" href="/css/base.css" />
+  </head>
+
+  <body class="admin-body">
+    <a class="skip-link" href="#admin-main">پرش به محتوای اصلی</a>
+
+    <header class="admin-header">
+      <div class="admin-header__bar">
+        <a class="brand" href="/admin">
+          <span class="brand__name">{{ storeName }}</span>
+          <span class="brand__latin">ADMIN</span>
+        </a>
+
+        {% if admin %}
+          {% include "partials/admin-nav.njk" %}
+        {% endif %}
+      </div>
+    </header>
+
+    <main id="admin-main" class="admin-main">
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

@@ -1,0 +1,12 @@
+{# نوار مدیر — نام مدیر و خروج. #}
+<div class="admin-nav">
+  <span class="admin-nav__who">{{ admin.displayName or admin.email }}</span>
+
+  {# خروج یک عمل تغییردهنده است، پس POST با توکن CSRF گره‌خورده به نشست.
+     مقدار را سرور از کوکی httpOnly می‌خواند؛ جاوااسکریپت صفحه به آن
+     دسترسی ندارد. #}
+  <form class="admin-nav__logout" action="/admin/logout" method="post">
+    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+    <button class="btn btn--quiet" type="submit">خروج</button>
+  </form>
+</div>

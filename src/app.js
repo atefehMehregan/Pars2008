@@ -12,11 +12,18 @@ import nunjucks from 'nunjucks';
 import path from 'node:path';
 import { config, ROOT } from './config/index.js';
 import { extraSecurityHeaders, csrfToken, notFound, errorHandler } from './middleware/security.js';
-import { generalLimiter } from './middleware/rateLimit.js';
+import { generalLimiter, loginLimiter } from './middleware/rateLimit.js';
 import { healthRouter } from './routes/health.js';
 import { pageRouter } from './routes/pages.js';
 import { createCatalogRouter } from './routes/catalog.js';
+import { createAdminRouter } from './routes/admin.js';
+import { createAdminAuthService } from './services/adminAuth.js';
+import { createAuditLog } from './services/audit.js';
+import { createAdminUserRepository } from './db/repositories/adminUsers.js';
+import { createAdminSessionRepository } from './db/repositories/adminSessions.js';
+import { createLoginAttemptRepository } from './db/repositories/loginAttempts.js';
 import * as productionRepositories from './db/repositories/index.js';
+import * as productionDb from './db/index.js';
 import { faDigits, formatToman, formatJalali } from './services/format.js';
 
 /**
@@ -28,7 +35,7 @@ import { faDigits, formatToman, formatJalali } from './services/format.js';
  *   PGlite تزریق می‌کنند — همان الگوی فاز ۱الف، تا لایهٔ اتصال
  *   تولید (src/db/index.js) دست‌نخورده بماند.
  */
-export function createApp({ repositories = productionRepositories } = {}) {
+export function createApp({ repositories = productionRepositories, db = null } = {}) {
   const app = express();
 
   /* پشت پراکسی (IIS/ARR یا Nginx) آی‌پی واقعی در X-Forwarded-For است. */
@@ -122,6 +129,22 @@ export function createApp({ repositories = productionRepositories } = {}) {
   app.use('/', healthRouter);
   app.use('/', pageRouter);
   app.use('/', createCatalogRouter(repositories));
+
+  /* بخش مدیر. مخزن‌های احراز هویت از همان اجراکنندهٔ پایگاه داده ساخته
+     می‌شوند که مخزن‌های کاتالوگ — در تولید استخر pg، در آزمون PGlite. */
+  const adminDb = db || repositories.db || productionDb;
+  const adminAudit = createAuditLog(adminDb);
+  const adminAuthService = createAdminAuthService({
+    adminUsers: createAdminUserRepository(adminDb),
+    adminSessions: createAdminSessionRepository(adminDb),
+    loginAttempts: createLoginAttemptRepository(adminDb),
+    audit: adminAudit,
+  });
+  app.use('/admin', createAdminRouter({
+    authService: adminAuthService,
+    audit: adminAudit,
+    loginLimiter,
+  }));
 
   app.use(notFound);
   app.use(errorHandler);
