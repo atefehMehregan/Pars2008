@@ -1,5 +1,11 @@
-{# نوار مدیر — نام مدیر و خروج. #}
+{# نوار مدیر — پیوندهای کاتالوگ، نام مدیر و خروج. #}
 <div class="admin-nav">
+  <nav class="admin-nav__links" aria-label="مدیریت کاتالوگ">
+    <a class="admin-nav__link" href="/admin/catalogue/products">محصول‌ها</a>
+    <a class="admin-nav__link" href="/admin/catalogue/categories">دسته‌ها</a>
+    <a class="admin-nav__link" href="/admin/catalogue/brands">برندها</a>
+  </nav>
+
   <span class="admin-nav__who">{{ admin.displayName or admin.email }}</span>
 
   {# خروج یک عمل تغییردهنده است، پس POST با توکن CSRF گره‌خورده به نشست.

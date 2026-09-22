@@ -23,7 +23,7 @@ export function createAdminRouter({ authService, audit, loginLimiter, repositori
   const router = express.Router();
   const { loadAdminSession, requireAdminAuth, requireAdminCsrf } =
     createAdminAuthMiddleware(authService);
-  const c = createAdminAuthController({ authService, audit });
+  const c = createAdminAuthController({ authService, audit, repositories });
 
   /* هر پاسخ این بخش: بدون کش، بدون نمایه‌سازی. */
   router.use(adminNoStore);

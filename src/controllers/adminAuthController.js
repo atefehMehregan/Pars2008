@@ -7,7 +7,7 @@
 import { config } from '../config/index.js';
 import { adminCookieOptions, adminCsrfCookieOptions } from '../middleware/adminAuth.js';
 
-export function createAdminAuthController({ authService, audit }) {
+export function createAdminAuthController({ authService, audit, repositories }) {
   /* ------------------------------------------- GET /admin/login */
 
   function showLogin(req, res) {
@@ -78,10 +78,30 @@ export function createAdminAuthController({ authService, audit }) {
 
   async function dashboard(req, res, next) {
     try {
-      const recent = await audit.recent({ limit: 10 });
+      const { products, categories, brands } = repositories;
+
+      /* شمارش‌ها از همان متدهای موجود مخزن می‌آیند؛ هیچ کوئری تازه‌ای
+         برای پیشخان نوشته نشده است. perPage=1 چون فقط total لازم است. */
+      const [all, active, categoryRows, brandRows, recent] = await Promise.all([
+        products.adminList({ perPage: 1 }),
+        products.adminList({ filters: { isActive: true }, perPage: 1 }),
+        categories.adminList(),
+        brands.adminList(),
+        audit.recent({ limit: 10 }),
+      ]);
+
       res.render('pages/admin/dashboard', {
         title: 'پیشخان مدیریت',
         recentActivity: recent,
+        counts: {
+          products: all.total,
+          productsActive: active.total,
+          productsInactive: all.total - active.total,
+          categories: categoryRows.length,
+          categoriesActive: categoryRows.filter((c) => c.is_active).length,
+          brands: brandRows.length,
+          brandsActive: brandRows.filter((b) => b.is_active).length,
+        },
       });
     } catch (err) {
       next(err);

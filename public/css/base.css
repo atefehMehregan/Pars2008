@@ -460,3 +460,12 @@ code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
   .spec-row { grid-template-columns: 1fr; }
   .admin-table__actions { white-space: normal; }
 }
+
+/* پیوندهای کاتالوگ در نوار بالای بخش مدیر. همان رنگ‌ها و فاصله‌های
+   موجود؛ فقط یک پیوند ساده که زیرخط ندارد. */
+.admin-nav__links { display: flex; gap: 0.2rem; flex-wrap: wrap; }
+.admin-nav__link {
+  padding: 0.35rem 0.7rem; color: var(--muted);
+  text-decoration: none; border-radius: var(--radius);
+}
+.admin-nav__link:hover { color: var(--accent); background: var(--surface); }

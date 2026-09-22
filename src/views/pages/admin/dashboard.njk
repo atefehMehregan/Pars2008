@@ -5,8 +5,48 @@
   <h1 class="admin-title">پیشخان</h1>
   <p class="admin-lede">
     خوش آمدید{% if admin.displayName %}، {{ admin.displayName }}{% endif %}.
-    مدیریت کاتالوگ در فاز بعد اضافه می‌شود.
+    از اینجا کاتالوگ را مدیریت کنید: محصول، دسته و برند.
   </p>
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">کاتالوگ</h2>
+    <table class="admin-table">
+      <thead>
+        <tr><th>بخش</th><th>همه</th><th>فعال</th><th>غیرفعال</th><th><span class="sr-only">مدیریت</span></th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>محصول‌ها</td>
+          <td>{{ counts.products | faDigits }}</td>
+          <td>{{ counts.productsActive | faDigits }}</td>
+          <td>{{ counts.productsInactive | faDigits }}</td>
+          <td><a class="btn btn--quiet" href="/admin/catalogue/products">مدیریت</a></td>
+        </tr>
+        <tr>
+          <td>دسته‌ها</td>
+          <td>{{ counts.categories | faDigits }}</td>
+          <td>{{ counts.categoriesActive | faDigits }}</td>
+          <td>{{ (counts.categories - counts.categoriesActive) | faDigits }}</td>
+          <td><a class="btn btn--quiet" href="/admin/catalogue/categories">مدیریت</a></td>
+        </tr>
+        <tr>
+          <td>برندها</td>
+          <td>{{ counts.brands | faDigits }}</td>
+          <td>{{ counts.brandsActive | faDigits }}</td>
+          <td>{{ (counts.brands - counts.brandsActive) | faDigits }}</td>
+          <td><a class="btn btn--quiet" href="/admin/catalogue/brands">مدیریت</a></td>
+        </tr>
+      </tbody>
+    </table>
+
+    {% if counts.products == 0 %}
+      <p class="admin-panel__empty">
+        کاتالوگ هنوز خالی است.
+        <a href="/admin/catalogue/categories/new">اول یک دسته بسازید</a>،
+        بعد محصول‌ها را اضافه کنید.
+      </p>
+    {% endif %}
+  </div>
 
   <div class="admin-panel">
     <h2 class="admin-panel__title">آخرین فعالیت</h2>
