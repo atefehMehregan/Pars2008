@@ -14,6 +14,7 @@
  * ==========================================================================*/
 import fs from 'node:fs';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { getPool, closeDb } from './index.js';
 import { ROOT } from '../config/index.js';
 
@@ -74,8 +75,19 @@ export async function runMigrations({ log = console.log } = {}) {
   return { applied, skipped };
 }
 
-/* اجرای مستقیم از خط فرمان: node src/db/migrate.js */
-const isDirectRun = process.argv[1] && path.resolve(process.argv[1]) === path.resolve(new URL(import.meta.url).pathname);
+/* اجرای مستقیم از خط فرمان: node src/db/migrate.js
+
+   مقایسه روی *نشانی فایل* انجام می‌شود، نه روی مسیر سیستم‌عامل.
+   شکل قبلی — path.resolve(new URL(import.meta.url).pathname) — روی
+   ویندوز کار نمی‌کرد: pathname آنجا «/C:/…» است و path.resolve آن را به
+   «\\C:\\…» تبدیل می‌کند که هرگز با «C:\\…» برابر نمی‌شود. نتیجه این
+   بود که «npm run migrate» روی ویندوز بی‌سروصدا با کد ۰ تمام می‌شد و
+   هیچ مهاجرتی اعمال نمی‌کرد — بدترین نوع شکست، چون خاموش است.
+
+   pathToFileURL قواعد مسیر همان سیستم‌عامل را اعمال می‌کند و خروجی‌اش
+   با import.meta.url هم‌شکل است، پس مقایسه روی هر دو سکو درست است. */
+const isDirectRun = Boolean(process.argv[1])
+  && pathToFileURL(process.argv[1]).href === import.meta.url;
 if (isDirectRun) {
   try {
     const { applied, skipped } = await runMigrations();

@@ -5,7 +5,7 @@
   "type": "module",
   "description": "2008Pars — Peugeot 2008 spare parts store (Persian, RTL)",
   "engines": {
-    "node": ">=20"
+    "node": ">=20.9.0"
   },
   "scripts": {
     "start": "node src/server.js",
