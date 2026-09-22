@@ -64,6 +64,35 @@ export function createAdminCatalogRouter({
   router.use(requireAdminAuth);
   router.use(requireAdminCsrf);
 
+  /**
+   * نگهبان شناسه.
+   *
+   * ستون id از نوع BIGINT است. اگر مقدار خام نشانی مستقیم به کوئری
+   * برسد، «abc» یا عددی بزرگ‌تر از بازه، خطای 22P02 پایگاه داده می‌دهد
+   * و کاربر صفحهٔ «خطای سرور» می‌بیند — برای نشانیِ بد، پاسخ درستی
+   * نیست. شناسهٔ ناموجود از قبل رفتار درستی داشت؛ شناسهٔ *بدشکل* نه.
+   *
+   * یک بار روی مسیریاب، نه روی تک‌تک مسیرها: هر مسیر تازه‌ای که
+   * :id بگیرد از همین لحظه محافظت‌شده است.
+   *
+   * سقف ۱۵ رقم عمدی است — بزرگ‌ترین مقدار ممکن از
+   * Number.MAX_SAFE_INTEGER کوچک‌تر می‌ماند، پس هیچ شناسه‌ای در
+   * رفت‌وبرگشت به عدد جاوااسکریپت دقتش را از دست نمی‌دهد.
+   *
+   * این نگهبان *پس از* requireAdminAuth و requireAdminCsrf اجرا
+   * می‌شود (آن دو با router.use پیش از مسیرها ثبت شده‌اند)، پس چیزی
+   * دربارهٔ وجود یا نبودِ ردیف به کاربر واردنشده نمی‌گوید.
+   */
+  router.param('id', (req, res, next, raw) => {
+    const value = String(raw);
+    if (/^\d{1,15}$/.test(value) && Number(value) > 0) return next();
+
+    /* همان رفتار «پیدا نشد» که برای شناسهٔ معتبرِ ناموجود وجود دارد. */
+    const entity = req.path.split('/')[1];
+    const list = ENTITIES.includes(entity) ? entity : 'products';
+    return res.redirect(303, `${req.baseUrl}/${list}?error=not_found`);
+  });
+
   /* --- از اینجا به بعد: فقط مدیرِ واردشده با توکن معتبرِ همین نشست --- */
 
   router.get('/', (req, res) => res.redirect(302, '/admin/catalogue/products'));

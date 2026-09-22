@@ -66,6 +66,10 @@ export function createApp({ repositories = productionRepositories, db = null } =
      یک فیلتر جداگانه صریح‌تر از هوشمندبازی در خود تابع است. */
   njk.addFilter('tomanPlain', (value) => formatToman(value, { withUnit: false }));
   njk.addFilter('jalali', formatJalali);
+  /* و به همان دلیل: «jalali(true)» یک boolean به formatJalali می‌رساند
+     که شیء گزینه‌ها می‌خواهد، پس بی‌اثر می‌ماند و ساعت هرگز نمایش داده
+     نمی‌شد. */
+  njk.addFilter('jalaliTime', (value) => formatJalali(value, { withTime: true }));
 
   /* ------------------------------------------------------- میان‌افزارها */
   app.use(helmet({

@@ -61,7 +61,7 @@
               <td><bdi class="part-number">{{ row.action }}</bdi></td>
               <td>{{ row.admin_email or '—' }}</td>
               <td><bdi class="part-number">{{ row.ip or '—' }}</bdi></td>
-              <td>{{ row.created_at | jalali(true) }}</td>
+              <td>{{ row.created_at | jalaliTime }}</td>
             </tr>
           {% endfor %}
         </tbody>

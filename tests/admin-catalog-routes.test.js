@@ -20,6 +20,7 @@ const { createCategoryRepository } = await import('../src/db/repositories/catego
 const { createBrandRepository } = await import('../src/db/repositories/brands.js');
 const { hashPassword } = await import('../src/services/password.js');
 const { config } = await import('../src/config/index.js');
+const { faDigits } = await import('../src/services/format.js');
 
 const EMAIL = 'admin@example.test';
 const PASSWORD = 'correct-horse-9-battery';
@@ -644,4 +645,185 @@ test('کاتالوگ عمومی همچنان فقط ردیف‌های فعال �
   await post(`${BASE_PATH}/products/${id}/active`, { isActive: 'no' });
   res = await fetch(`${BASE}/products`);
   assert.ok(!(await res.text()).includes('لنت ترمز جلو'), 'غیرفعال از سایت برداشته می‌شود');
+});
+
+/* ================================================ شناسهٔ بدشکل ====== */
+
+/** شناسه‌هایی که هرگز نباید به پایگاه داده برسند. */
+const BAD_IDS = [
+  'abc',                      // اصلا عدد نیست
+  '%D8%A7%D9%84%D9%81',       // حروف فارسی، رمزگذاری‌شده
+  '99999999999999999999',     // بزرگ‌تر از بازهٔ امن
+  '0',                        // هیچ ردیفی شناسهٔ صفر ندارد
+  '-1',                       // منفی
+  '1.5',                      // اعشاری
+];
+
+test('شناسهٔ بدشکل در GET به جای خطای ۵۰۰، به فهرست برمی‌گردد', async () => {
+  /* رگرسیون: پیش از این، مقدار خام مستقیم وارد کوئری BIGINT می‌شد و
+     PostgreSQL خطای 22P02 می‌داد که به صفحهٔ «خطای سرور» می‌رسید. */
+  for (const entity of ['products', 'categories', 'brands']) {
+    for (const bad of BAD_IDS) {
+      const { res, html } = await get(`${BASE_PATH}/${entity}/${bad}/edit`);
+      assert.equal(res.status, 303, `${entity}/${bad} نباید ۵۰۰ بدهد`);
+      assert.equal(res.headers.get('location'), `${BASE_PATH}/${entity}?error=not_found`,
+        `${entity}/${bad} باید به فهرست همان بخش برگردد`);
+      assert.ok(!html.includes('خطای سرور'), 'صفحهٔ خطای سرور نباید دیده شود');
+    }
+  }
+});
+
+test('شناسهٔ بدشکل در POST هم ۵۰۰ نمی‌دهد', async () => {
+  const routes = [
+    `${BASE_PATH}/products/abc`,
+    `${BASE_PATH}/products/abc/active`,
+    `${BASE_PATH}/products/abc/stock`,
+    `${BASE_PATH}/products/99999999999999999999/delete`,
+    `${BASE_PATH}/categories/abc`,
+    `${BASE_PATH}/categories/abc/delete`,
+    `${BASE_PATH}/categories/abc/active`,
+    `${BASE_PATH}/brands/abc`,
+    `${BASE_PATH}/brands/abc/delete`,
+    `${BASE_PATH}/brands/abc/active`,
+  ];
+  for (const path of routes) {
+    const { res, html } = await post(path, { confirm: 'yes', isActive: 'no', stockQty: '1' });
+    assert.equal(res.status, 303, `${path} نباید ۵۰۰ بدهد`);
+    assert.match(res.headers.get('location'), /error=not_found$/, path);
+    assert.ok(!html.includes('خطای سرور'));
+  }
+});
+
+test('نگهبان شناسه چیزی را حذف یا عوض نمی‌کند', async () => {
+  const { categoryId } = await seedCatalog();
+  await post(`${BASE_PATH}/products`, productFields(categoryId));
+  const before = await countProducts();
+
+  await post(`${BASE_PATH}/products/abc/delete`, { confirm: 'yes' });
+  await post(`${BASE_PATH}/categories/abc/delete`, { confirm: 'yes' });
+  await post(`${BASE_PATH}/brands/abc/delete`, { confirm: 'yes' });
+
+  assert.equal(await countProducts(), before, 'هیچ ردیفی نباید حذف شده باشد');
+  assert.equal((await db.query('SELECT COUNT(*)::int AS n FROM categories')).rows[0].n, 1);
+});
+
+test('شناسهٔ درستِ ناموجود همان رفتار قبلی را دارد', async () => {
+  /* نگهبان نباید رفتار «معتبر ولی ناموجود» را عوض کند. */
+  const { res } = await get(`${BASE_PATH}/products/999999/edit`);
+  assert.equal(res.status, 303);
+  assert.equal(res.headers.get('location'), `${BASE_PATH}/products?error=not_found`);
+});
+
+test('شناسهٔ درستِ موجود دست‌نخورده کار می‌کند', async () => {
+  const { categoryId } = await seedCatalog();
+  await post(`${BASE_PATH}/products`, productFields(categoryId));
+  const id = (await db.query('SELECT id FROM products')).rows[0].id;
+  const { res, html } = await get(`${BASE_PATH}/products/${id}/edit`);
+  assert.equal(res.status, 200);
+  assert.ok(html.includes('لنت ترمز جلو'));
+});
+
+test('نگهبان شناسه پیش از مرز اجازهٔ دسترسی حرف نمی‌زند', async () => {
+  /* کاربر واردنشده باید همان پاسخ همیشگی مرز را بگیرد، نه هدایت به
+     فهرست — وگرنه نگهبان داشت دربارهٔ ساختار پنل حرف می‌زد. */
+  const g = await fetch(`${BASE}${BASE_PATH}/products/abc/edit`, { redirect: 'manual' });
+  assert.equal(g.status, 302);
+  assert.equal(g.headers.get('location'), '/admin/login');
+
+  const p = await fetch(`${BASE}${BASE_PATH}/products/abc/delete`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ confirm: 'yes' }),
+    redirect: 'manual',
+  });
+  assert.equal(p.status, 401);
+});
+
+/* ================================================ شمارش پیشخان ==== */
+
+/** ردیف‌های جدول شمارش پیشخان: [برچسب، همه، فعال، غیرفعال]. */
+async function dashboardCountRows() {
+  const { html } = await get('/admin');
+  const tbody = html.split('<tbody>')[1].split('</tbody>')[0];
+  return tbody.split('<tr>').slice(1).map((chunk) => {
+    const cells = chunk.split('</tr>')[0].match(/<td>([^<]*)<\/td>/g) || [];
+    return cells.map((c) => c.replace(/<\/?td>/g, '').trim());
+  });
+}
+
+test('پیشخان وقتی کاتالوگ خالی است صفر نشان می‌دهد و راهنمایی می‌کند', async () => {
+  const rows = await dashboardCountRows();
+  assert.deepEqual(rows, [
+    ['محصول‌ها', faDigits(0), faDigits(0), faDigits(0)],
+    ['دسته‌ها', faDigits(0), faDigits(0), faDigits(0)],
+    ['برندها', faDigits(0), faDigits(0), faDigits(0)],
+  ]);
+  const { html } = await get('/admin');
+  assert.ok(html.includes('کاتالوگ هنوز خالی است'), 'باید راه شروع را نشان بدهد');
+});
+
+test('پیشخان شمار درست محصول، دسته و برند را نشان می‌دهد', async () => {
+  const { categoryId } = await seedCatalog();                       // ۱ دسته، ۱ برند
+  await insertCategory(db, { name: 'فیلتر', slug: 'فیلتر' });        // ۲ دسته
+  await insertBrand(db, { name: 'بوش', slug: 'بوش' });               // ۲ برند
+  for (let i = 0; i < 3; i++) {
+    await products.create({
+      name: `قطعه ${i}`, slug: `قطعه-${i}`, sku: `SKU-${i}`, categoryId,
+      priceToman: 1000, stockQty: 1, availability: 'in_stock', specs: {},
+    });
+  }
+
+  const rows = await dashboardCountRows();
+  assert.deepEqual(rows[0], ['محصول‌ها', faDigits(3), faDigits(3), faDigits(0)]);
+  assert.deepEqual(rows[1], ['دسته‌ها', faDigits(2), faDigits(2), faDigits(0)]);
+  assert.deepEqual(rows[2], ['برندها', faDigits(2), faDigits(2), faDigits(0)]);
+
+  const { html } = await get('/admin');
+  assert.ok(!html.includes('کاتالوگ هنوز خالی است'), 'پیام خالی نباید بماند');
+});
+
+test('پیشخان فعال و غیرفعال را جدا می‌شمارد', async () => {
+  const { categoryId, brandId } = await seedCatalog();
+  const inactiveCategory = await insertCategory(db, { name: 'بایگانی', slug: 'بایگانی' });
+  const a = await products.create({ name: 'الف', slug: 'الف', sku: 'A', categoryId,
+    priceToman: 1000, stockQty: 1, availability: 'in_stock', specs: {} });
+  await products.create({ name: 'ب', slug: 'ب', sku: 'B', categoryId,
+    priceToman: 1000, stockQty: 1, availability: 'in_stock', specs: {} });
+
+  await products.setActive(a, false);
+  await categories.setActive(inactiveCategory, false);
+  await brands.setActive(brandId, false);
+
+  const rows = await dashboardCountRows();
+  assert.deepEqual(rows[0], ['محصول‌ها', faDigits(2), faDigits(1), faDigits(1)]);
+  assert.deepEqual(rows[1], ['دسته‌ها', faDigits(2), faDigits(1), faDigits(1)]);
+  assert.deepEqual(rows[2], ['برندها', faDigits(1), faDigits(0), faDigits(1)]);
+});
+
+test('شمارش پیشخان غیرفعال شدن از راه فرم را هم می‌بیند', async () => {
+  const { categoryId } = await seedCatalog();
+  await post(`${BASE_PATH}/products`, productFields(categoryId));
+  const id = (await db.query('SELECT id FROM products')).rows[0].id;
+
+  assert.deepEqual((await dashboardCountRows())[0],
+    ['محصول‌ها', faDigits(1), faDigits(1), faDigits(0)]);
+
+  await post(`${BASE_PATH}/products/${id}/active`, { isActive: 'no' });
+
+  assert.deepEqual((await dashboardCountRows())[0],
+    ['محصول‌ها', faDigits(1), faDigits(0), faDigits(1)]);
+});
+
+/* ============================================ زمان در رد پا ======= */
+
+test('رد پای پیشخان ساعت را هم نشان می‌دهد، نه فقط تاریخ', async () => {
+  /* رگرسیون: فیلتر «jalali(true)» بی‌اثر بود چون Nunjucks آرگومان را
+     موضعی می‌دهد و formatJalali شیء گزینه‌ها می‌خواهد. نتیجه: ساعت
+     هرگز نمایش داده نمی‌شد. */
+  const { html } = await get('/admin');
+  assert.ok(html.includes('admin.login.success'), 'رد پای ورود باید باشد');
+
+  const activity = html.split('آخرین فعالیت')[1];
+  assert.ok(/[۰-۹]{4}\/[۰-۹]{2}\/[۰-۹]{2}/.test(activity), 'تاریخ شمسی باید باشد');
+  assert.ok(/[۰-۹]{2}:[۰-۹]{2}/.test(activity), 'ساعت هم باید باشد');
 });
