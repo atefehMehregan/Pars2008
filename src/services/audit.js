@@ -17,6 +17,24 @@ export const AUDIT_ACTIONS = {
   LOGOUT: 'admin.logout',
   ADMIN_CREATED: 'admin.created',
   PASSWORD_CHANGED: 'admin.password.changed',
+
+  /* کاتالوگ. جداسازی «فعال/غیرفعال» از «حذف» عمدی است: اولی بازگشت‌پذیر
+     است و دومی نیست، و گزارش بعدی باید بتواند این دو را از هم جدا کند. */
+  PRODUCT_CREATED: 'catalog.product.created',
+  PRODUCT_UPDATED: 'catalog.product.updated',
+  PRODUCT_DELETED: 'catalog.product.deleted',
+  PRODUCT_ACTIVE_CHANGED: 'catalog.product.active',
+  PRODUCT_STOCK_CHANGED: 'catalog.product.stock',
+
+  CATEGORY_CREATED: 'catalog.category.created',
+  CATEGORY_UPDATED: 'catalog.category.updated',
+  CATEGORY_DELETED: 'catalog.category.deleted',
+  CATEGORY_ACTIVE_CHANGED: 'catalog.category.active',
+
+  BRAND_CREATED: 'catalog.brand.created',
+  BRAND_UPDATED: 'catalog.brand.updated',
+  BRAND_DELETED: 'catalog.brand.deleted',
+  BRAND_ACTIVE_CHANGED: 'catalog.brand.active',
 };
 
 export function createAuditLog(db) {
