@@ -1,0 +1,61 @@
+{% extends "layouts/admin.njk" %}
+{% import "partials/admin-field.njk" as f %}
+{% import "partials/admin-delete-form.njk" as danger %}
+
+{% block content %}
+<section class="admin-section">
+  <div class="admin-headline">
+    <h1 class="admin-title">{{ 'برند تازه' if mode == 'new' else 'ویرایش برند' }}</h1>
+    <a class="btn btn--quiet" href="/admin/catalogue/brands">بازگشت به فهرست</a>
+  </div>
+
+  {% include "partials/admin-flash.njk" %}
+
+  {% if errors._general %}
+    <p class="admin-flash admin-flash--error" role="alert">{{ errors._general }}</p>
+  {% endif %}
+  {% if (errors | length) and not errors._delete and not errors._general %}
+    <p class="admin-flash admin-flash--error" role="alert">فرم ذخیره نشد. کادرهای مشخص‌شده را اصلاح کنید.</p>
+  {% endif %}
+
+  <form class="admin-form"
+        action="{{ '/admin/catalogue/brands' if mode == 'new' else '/admin/catalogue/brands/' + (brand.id | string) }}"
+        method="post">
+    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+
+    <div class="admin-panel">
+      <div class="form-grid">
+        {{ f.text('name', 'نام برند', values.name, errors, 'text', true) }}
+        {{ f.text('slug', 'نشانی', values.slug, errors, 'text', false,
+                  'خالی بگذارید تا از روی نام ساخته شود.') }}
+        {{ f.text('country', 'کشور', values.country, errors) }}
+      </div>
+      {{ f.check('isActive', 'فعال — در سایت دیده شود', values.isActive) }}
+
+      {% if mode == 'edit' %}
+        <p class="field__hint">
+          با تغییر نام برند، متن جست‌وجوی محصول‌های همین برند خودکار به‌روز می‌شود
+          تا نام قدیمی دیگر در نتیجه‌ها نیاید.
+        </p>
+      {% endif %}
+    </div>
+
+    <div class="admin-form__actions">
+      <button class="btn btn--primary" type="submit">
+        {{ 'ثبت برند' if mode == 'new' else 'ذخیرهٔ تغییرها' }}
+      </button>
+      <a class="btn btn--quiet" href="/admin/catalogue/brands">انصراف</a>
+    </div>
+  </form>
+
+  {% if mode == 'edit' %}
+    {{ danger.dangerZone(
+         '/admin/catalogue/brands/' + (brand.id | string) + '/delete',
+         adminCsrfToken,
+         'حذف دائمی این برند',
+         'اگر محصولی به این برند وصل باشد، حذف انجام نمی‌شود و دلیلش گفته خواهد شد. برای پنهان کردن موقت، «غیرفعال» کافی است.',
+         errors._delete
+       ) }}
+  {% endif %}
+</section>
+{% endblock %}

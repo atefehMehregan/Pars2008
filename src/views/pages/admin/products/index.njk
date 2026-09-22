@@ -1,0 +1,171 @@
+{% extends "layouts/admin.njk" %}
+
+{% block content %}
+<section class="admin-section">
+  <div class="admin-headline">
+    <h1 class="admin-title">محصول‌ها</h1>
+    <a class="btn btn--primary" href="/admin/catalogue/products/new">محصول تازه</a>
+  </div>
+
+  <nav class="admin-subnav" aria-label="بخش‌های کاتالوگ">
+    <a class="admin-subnav__link is-current" href="/admin/catalogue/products">محصول‌ها</a>
+    <a class="admin-subnav__link" href="/admin/catalogue/categories">دسته‌ها</a>
+    <a class="admin-subnav__link" href="/admin/catalogue/brands">برندها</a>
+  </nav>
+
+  {% include "partials/admin-flash.njk" %}
+
+  {# --- فیلترها: GET، چون جست‌وجو تغییری ایجاد نمی‌کند --- #}
+  <form class="admin-filters" action="/admin/catalogue/products" method="get">
+    <div class="field">
+      <label class="field__label" for="f-q">جست‌وجو</label>
+      <input class="field__input" id="f-q" name="q" type="search"
+             value="{{ filters.q }}" placeholder="نام، کد کالا یا شماره فنی" />
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="f-category">دسته</label>
+      <select class="field__input" id="f-category" name="category">
+        <option value="">همه</option>
+        {% for c in categoryOptions %}
+          <option value="{{ c.id }}"
+            {% if filters.category and (filters.category | string) == (c.id | string) %}selected{% endif %}>
+            {{ c.name }}{% if not c.is_active %} (غیرفعال){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="f-brand">برند</label>
+      <select class="field__input" id="f-brand" name="brand">
+        <option value="">همه</option>
+        {% for b in brandOptions %}
+          <option value="{{ b.id }}"
+            {% if filters.brand and (filters.brand | string) == (b.id | string) %}selected{% endif %}>
+            {{ b.name }}{% if not b.is_active %} (غیرفعال){% endif %}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="f-active">وضعیت انتشار</label>
+      <select class="field__input" id="f-active" name="active">
+        <option value="">همه</option>
+        <option value="yes" {% if filters.active == 'yes' %}selected{% endif %}>فعال</option>
+        <option value="no"  {% if filters.active == 'no'  %}selected{% endif %}>غیرفعال</option>
+      </select>
+    </div>
+
+    <div class="admin-filters__actions">
+      <button class="btn btn--quiet" type="submit">اعمال</button>
+      <a class="btn btn--quiet" href="/admin/catalogue/products">پاک کردن</a>
+    </div>
+  </form>
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">
+      {{ result.total | faDigits }} محصول
+      {% if result.pageCount > 1 %}
+        — صفحهٔ {{ result.page | faDigits }} از {{ result.pageCount | faDigits }}
+      {% endif %}
+    </h2>
+
+    {% if items.length %}
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>نام</th>
+              <th>کد کالا</th>
+              <th>شماره فنی</th>
+              <th>برند</th>
+              <th>دسته</th>
+              <th>قیمت</th>
+              <th>موجودی</th>
+              <th>وضعیت</th>
+              <th>انتشار</th>
+              <th><span class="sr-only">کارها</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for p in items %}
+              <tr class="{% if not p.is_active %}is-inactive{% endif %}">
+                <td>
+                  <a class="admin-table__name" href="/admin/catalogue/products/{{ p.id }}/edit">{{ p.name }}</a>
+                </td>
+                <td><bdi class="part-number">{{ p.sku }}</bdi></td>
+                <td>{% if p.oem_number %}<bdi class="part-number">{{ p.oem_number }}</bdi>{% else %}—{% endif %}</td>
+                <td>{{ p.brand_name or '—' }}</td>
+                <td>{{ p.category_name }}</td>
+                <td>
+                  {% if p.sale_price_toman %}
+                    <span class="price-sale">{{ p.sale_price_toman | toman }}</span>
+                    <s class="price-old">{{ p.price_toman | tomanPlain }}</s>
+                  {% else %}
+                    {{ p.price_toman | toman }}
+                  {% endif %}
+                </td>
+                <td>{{ p.stock_qty | faDigits }}</td>
+                <td>{{ availabilityLabels[p.availability] }}</td>
+                <td>
+                  {% if p.is_active %}
+                    <span class="pill pill--on">فعال</span>
+                  {% else %}
+                    <span class="pill pill--off">غیرفعال</span>
+                  {% endif %}
+                </td>
+                <td class="admin-table__actions">
+                  <a class="btn btn--quiet" href="/admin/catalogue/products/{{ p.id }}/edit">ویرایش</a>
+
+                  {# کار روزمره و بازگشت‌پذیر: یک کلیک. #}
+                  <form class="inline-form" action="/admin/catalogue/products/{{ p.id }}/active" method="post">
+                    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+                    <input type="hidden" name="isActive" value="{{ 'no' if p.is_active else 'yes' }}" />
+                    <input type="hidden" name="q" value="{{ filters.q }}" />
+                    <input type="hidden" name="category" value="{{ filters.category or '' }}" />
+                    <input type="hidden" name="brand" value="{{ filters.brand or '' }}" />
+                    <input type="hidden" name="active" value="{{ filters.active }}" />
+                    <input type="hidden" name="page" value="{{ result.page }}" />
+                    <button class="btn {{ 'btn--warn' if p.is_active else 'btn--primary' }}" type="submit">
+                      {{ 'غیرفعال کردن' if p.is_active else 'فعال کردن' }}
+                    </button>
+                  </form>
+
+                  {# حذف دائمی یک کلیک نیست: به ناحیهٔ تأیید می‌رود. #}
+                  <a class="link-danger" href="/admin/catalogue/products/{{ p.id }}/edit#delete">حذف…</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if pagination %}
+        <nav class="pagination" aria-label="صفحه‌بندی">
+          <ul class="pagination__list">
+            {% if pagination.prevUrl %}
+              <li><a class="pagination__link" href="{{ pagination.prevUrl }}">قبلی</a></li>
+            {% endif %}
+            {% for pg in pagination.pages %}
+              <li>
+                <a class="pagination__link {% if pg.isCurrent %}is-current{% endif %}"
+                   href="{{ pg.url }}">{{ pg.number | faDigits }}</a>
+              </li>
+            {% endfor %}
+            {% if pagination.nextUrl %}
+              <li><a class="pagination__link" href="{{ pagination.nextUrl }}">بعدی</a></li>
+            {% endif %}
+          </ul>
+        </nav>
+      {% endif %}
+    {% else %}
+      <p class="admin-panel__empty">
+        محصولی با این شرط‌ها پیدا نشد.
+        <a href="/admin/catalogue/products/new">یک محصول تازه بسازید</a>.
+      </p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

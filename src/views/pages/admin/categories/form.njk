@@ -1,0 +1,72 @@
+{% extends "layouts/admin.njk" %}
+{% import "partials/admin-field.njk" as f %}
+{% import "partials/admin-delete-form.njk" as danger %}
+
+{% block content %}
+<section class="admin-section">
+  <div class="admin-headline">
+    <h1 class="admin-title">{{ 'دستهٔ تازه' if mode == 'new' else 'ویرایش دسته' }}</h1>
+    <a class="btn btn--quiet" href="/admin/catalogue/categories">بازگشت به فهرست</a>
+  </div>
+
+  {% include "partials/admin-flash.njk" %}
+
+  {% if errors._general %}
+    <p class="admin-flash admin-flash--error" role="alert">{{ errors._general }}</p>
+  {% endif %}
+  {% if (errors | length) and not errors._delete and not errors._general %}
+    <p class="admin-flash admin-flash--error" role="alert">فرم ذخیره نشد. کادرهای مشخص‌شده را اصلاح کنید.</p>
+  {% endif %}
+
+  <form class="admin-form"
+        action="{{ '/admin/catalogue/categories' if mode == 'new' else '/admin/catalogue/categories/' + (category.id | string) }}"
+        method="post">
+    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+
+    <div class="admin-panel">
+      <div class="form-grid">
+        {{ f.text('name', 'نام دسته', values.name, errors, 'text', true) }}
+        {{ f.text('slug', 'نشانی', values.slug, errors, 'text', false,
+                  'خالی بگذارید تا از روی نام ساخته شود.') }}
+
+        <div class="field{% if errors.parentId %} field--invalid{% endif %}">
+          <label class="field__label" for="f-parentId">دستهٔ والد</label>
+          <select class="field__input" id="f-parentId" name="parentId">
+            <option value="">— بدون والد —</option>
+            {% for c in parentOptions %}
+              <option value="{{ c.id }}"
+                {% if values.parentId and (values.parentId | string) == (c.id | string) %}selected{% endif %}>
+                {{ c.name }}
+              </option>
+            {% endfor %}
+          </select>
+          {% if errors.parentId %}<p class="field__error">{{ errors.parentId }}</p>{% endif %}
+        </div>
+
+        {{ f.text('sortOrder', 'ترتیب نمایش', values.sortOrder, errors, 'text', false,
+                  'عدد کوچک‌تر، بالاتر.') }}
+      </div>
+
+      {{ f.textarea('description', 'توضیح', values.description, errors, 4) }}
+      {{ f.check('isActive', 'فعال — در سایت دیده شود', values.isActive) }}
+    </div>
+
+    <div class="admin-form__actions">
+      <button class="btn btn--primary" type="submit">
+        {{ 'ثبت دسته' if mode == 'new' else 'ذخیرهٔ تغییرها' }}
+      </button>
+      <a class="btn btn--quiet" href="/admin/catalogue/categories">انصراف</a>
+    </div>
+  </form>
+
+  {% if mode == 'edit' %}
+    {{ danger.dangerZone(
+         '/admin/catalogue/categories/' + (category.id | string) + '/delete',
+         adminCsrfToken,
+         'حذف دائمی این دسته',
+         'اگر محصولی یا زیردسته‌ای به این دسته وصل باشد، حذف انجام نمی‌شود و دلیلش گفته خواهد شد. برای پنهان کردن موقت، «غیرفعال» کافی است.',
+         errors._delete
+       ) }}
+  {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,5 @@
+{# پیام پس از هدایت. متن از فهرست سفیدِ سرور می‌آید، نه از نشانی. #}
+{% if flash %}
+  <p class="admin-flash admin-flash--{{ flash.type }}"
+     role="{{ 'alert' if flash.type == 'error' else 'status' }}">{{ flash.text }}</p>
+{% endif %}

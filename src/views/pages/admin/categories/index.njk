@@ -1,0 +1,68 @@
+{% extends "layouts/admin.njk" %}
+
+{% block content %}
+<section class="admin-section">
+  <div class="admin-headline">
+    <h1 class="admin-title">دسته‌ها</h1>
+    <a class="btn btn--primary" href="/admin/catalogue/categories/new">دستهٔ تازه</a>
+  </div>
+
+  <nav class="admin-subnav" aria-label="بخش‌های کاتالوگ">
+    <a class="admin-subnav__link" href="/admin/catalogue/products">محصول‌ها</a>
+    <a class="admin-subnav__link is-current" href="/admin/catalogue/categories">دسته‌ها</a>
+    <a class="admin-subnav__link" href="/admin/catalogue/brands">برندها</a>
+  </nav>
+
+  {% include "partials/admin-flash.njk" %}
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">{{ items.length | faDigits }} دسته</h2>
+
+    {% if items.length %}
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>نام</th><th>نشانی</th><th>والد</th><th>ترتیب</th>
+              <th>محصول</th><th>زیردسته</th><th>انتشار</th>
+              <th><span class="sr-only">کارها</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for c in items %}
+              <tr class="{% if not c.is_active %}is-inactive{% endif %}">
+                <td><a class="admin-table__name" href="/admin/catalogue/categories/{{ c.id }}/edit">{{ c.name }}</a></td>
+                <td><bdi class="part-number">{{ c.slug }}</bdi></td>
+                <td>{{ c.parent_name or '—' }}</td>
+                <td>{{ c.sort_order | faDigits }}</td>
+                <td>{{ c.product_count | faDigits }}</td>
+                <td>{{ c.child_count | faDigits }}</td>
+                <td>
+                  {% if c.is_active %}<span class="pill pill--on">فعال</span>
+                  {% else %}<span class="pill pill--off">غیرفعال</span>{% endif %}
+                </td>
+                <td class="admin-table__actions">
+                  <a class="btn btn--quiet" href="/admin/catalogue/categories/{{ c.id }}/edit">ویرایش</a>
+                  <form class="inline-form" action="/admin/catalogue/categories/{{ c.id }}/active" method="post">
+                    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+                    <input type="hidden" name="isActive" value="{{ 'no' if c.is_active else 'yes' }}" />
+                    <button class="btn {{ 'btn--warn' if c.is_active else 'btn--primary' }}" type="submit">
+                      {{ 'غیرفعال کردن' if c.is_active else 'فعال کردن' }}
+                    </button>
+                  </form>
+                  <a class="link-danger" href="/admin/catalogue/categories/{{ c.id }}/edit#delete">حذف…</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="admin-panel__empty">
+        هنوز دسته‌ای ساخته نشده است.
+        <a href="/admin/catalogue/categories/new">اولین دسته را بسازید</a>.
+      </p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

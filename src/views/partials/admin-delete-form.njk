@@ -1,0 +1,25 @@
+{# ============================================================================
+   ناحیهٔ حذف دائمی.
+
+   عمدا پایین صفحه، جدا از دکمهٔ ذخیره، با رنگ هشدار و پشت یک کادر تأیید.
+   «غیرفعال کردن» کارِ روزمره است و باید آسان باشد؛ حذف دائمی نباید.
+
+   تأیید سمت *سرور* هم بررسی می‌شود — required در HTML فقط یک یادآوری
+   است و هر درخواست دست‌ساز از کنارش رد می‌شود.
+   ========================================================================= #}
+{% macro dangerZone(action, csrf, buttonLabel, description, error='') %}
+  <section class="admin-danger" id="delete">
+    <h2 class="admin-danger__title">حذف دائمی</h2>
+    <p class="admin-danger__text">{{ description }}</p>
+    {% if error %}<p class="field__error">{{ error }}</p>{% endif %}
+
+    <form class="admin-danger__form" action="{{ action }}" method="post">
+      <input type="hidden" name="_csrf" value="{{ csrf }}" />
+      <label class="check">
+        <input type="checkbox" name="confirm" value="yes" required />
+        <span>می‌دانم که این کار برگشت‌پذیر نیست.</span>
+      </label>
+      <button class="btn btn--danger" type="submit">{{ buttonLabel }}</button>
+    </form>
+  </section>
+{% endmacro %}

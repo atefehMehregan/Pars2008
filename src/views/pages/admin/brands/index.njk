@@ -1,0 +1,65 @@
+{% extends "layouts/admin.njk" %}
+
+{% block content %}
+<section class="admin-section">
+  <div class="admin-headline">
+    <h1 class="admin-title">برندها</h1>
+    <a class="btn btn--primary" href="/admin/catalogue/brands/new">برند تازه</a>
+  </div>
+
+  <nav class="admin-subnav" aria-label="بخش‌های کاتالوگ">
+    <a class="admin-subnav__link" href="/admin/catalogue/products">محصول‌ها</a>
+    <a class="admin-subnav__link" href="/admin/catalogue/categories">دسته‌ها</a>
+    <a class="admin-subnav__link is-current" href="/admin/catalogue/brands">برندها</a>
+  </nav>
+
+  {% include "partials/admin-flash.njk" %}
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">{{ items.length | faDigits }} برند</h2>
+
+    {% if items.length %}
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>نام</th><th>نشانی</th><th>کشور</th><th>محصول</th><th>انتشار</th>
+              <th><span class="sr-only">کارها</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for b in items %}
+              <tr class="{% if not b.is_active %}is-inactive{% endif %}">
+                <td><a class="admin-table__name" href="/admin/catalogue/brands/{{ b.id }}/edit">{{ b.name }}</a></td>
+                <td><bdi class="part-number">{{ b.slug }}</bdi></td>
+                <td>{{ b.country or '—' }}</td>
+                <td>{{ b.product_count | faDigits }}</td>
+                <td>
+                  {% if b.is_active %}<span class="pill pill--on">فعال</span>
+                  {% else %}<span class="pill pill--off">غیرفعال</span>{% endif %}
+                </td>
+                <td class="admin-table__actions">
+                  <a class="btn btn--quiet" href="/admin/catalogue/brands/{{ b.id }}/edit">ویرایش</a>
+                  <form class="inline-form" action="/admin/catalogue/brands/{{ b.id }}/active" method="post">
+                    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+                    <input type="hidden" name="isActive" value="{{ 'no' if b.is_active else 'yes' }}" />
+                    <button class="btn {{ 'btn--warn' if b.is_active else 'btn--primary' }}" type="submit">
+                      {{ 'غیرفعال کردن' if b.is_active else 'فعال کردن' }}
+                    </button>
+                  </form>
+                  <a class="link-danger" href="/admin/catalogue/brands/{{ b.id }}/edit#delete">حذف…</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="admin-panel__empty">
+        هنوز برندی ساخته نشده است.
+        <a href="/admin/catalogue/brands/new">اولین برند را بسازید</a>.
+      </p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

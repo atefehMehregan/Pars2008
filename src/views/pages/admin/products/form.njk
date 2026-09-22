@@ -1,0 +1,181 @@
+{% extends "layouts/admin.njk" %}
+{% import "partials/admin-field.njk" as f %}
+{% import "partials/admin-delete-form.njk" as danger %}
+
+{% block content %}
+<section class="admin-section">
+  <div class="admin-headline">
+    <h1 class="admin-title">{{ 'محصول تازه' if mode == 'new' else 'ویرایش محصول' }}</h1>
+    <a class="btn btn--quiet" href="/admin/catalogue/products">بازگشت به فهرست</a>
+  </div>
+
+  {% include "partials/admin-flash.njk" %}
+
+  {% if errors._general %}
+    <p class="admin-flash admin-flash--error" role="alert">{{ errors._general }}</p>
+  {% endif %}
+
+  {# خلاصه فقط وقتی خطای *فیلد* هست. خطای عمومی و خطای تأیید حذف پیام
+     خودشان را دارند و تکرارشان اینجا گیج‌کننده است. #}
+  {% if (errors | length) and not errors._delete and not errors._general %}
+    <p class="admin-flash admin-flash--error" role="alert">
+      فرم ذخیره نشد. کادرهای مشخص‌شده را اصلاح کنید.
+    </p>
+  {% endif %}
+
+  {% for w in warnings %}
+    <p class="admin-flash admin-flash--warn" role="status">{{ w }}</p>
+  {% endfor %}
+
+  <form class="admin-form"
+        action="{{ '/admin/catalogue/products' if mode == 'new' else '/admin/catalogue/products/' + (product.id | string) }}"
+        method="post">
+    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">شناسایی</h2>
+      <div class="form-grid">
+        {{ f.text('name', 'نام محصول', values.name, errors, 'text', true) }}
+        {{ f.text('slug', 'نشانی', values.slug, errors, 'text', false,
+                  'خالی بگذارید تا از روی نام ساخته شود.') }}
+        {{ f.text('sku', 'کد کالا', values.sku, errors, 'text', true, '', 'ltr') }}
+        {{ f.text('oemNumber', 'شماره فنی (OEM)', values.oemNumber, errors, 'text', false,
+                  'جداکننده‌ها مهم نیست؛ خودش یکدست می‌شود.', 'ltr') }}
+      </div>
+    </div>
+
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">دسته‌بندی</h2>
+      <div class="form-grid">
+        <div class="field{% if errors.categoryId %} field--invalid{% endif %}">
+          <label class="field__label" for="f-categoryId">دسته <span class="field__req">*</span></label>
+          <select class="field__input" id="f-categoryId" name="categoryId">
+            <option value="">— انتخاب کنید —</option>
+            {% for c in categoryOptions %}
+              <option value="{{ c.id }}"
+                {% if values.categoryId and (values.categoryId | string) == (c.id | string) %}selected{% endif %}>
+                {{ c.name }}{% if not c.is_active %} (غیرفعال){% endif %}
+              </option>
+            {% endfor %}
+          </select>
+          {% if errors.categoryId %}<p class="field__error">{{ errors.categoryId }}</p>{% endif %}
+        </div>
+
+        <div class="field{% if errors.brandId %} field--invalid{% endif %}">
+          <label class="field__label" for="f-brandId">برند</label>
+          <select class="field__input" id="f-brandId" name="brandId">
+            <option value="">— بدون برند —</option>
+            {% for b in brandOptions %}
+              <option value="{{ b.id }}"
+                {% if values.brandId and (values.brandId | string) == (b.id | string) %}selected{% endif %}>
+                {{ b.name }}{% if not b.is_active %} (غیرفعال){% endif %}
+              </option>
+            {% endfor %}
+          </select>
+          {% if errors.brandId %}<p class="field__error">{{ errors.brandId }}</p>{% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">قیمت و موجودی</h2>
+      <div class="form-grid">
+        {{ f.text('priceToman', 'قیمت (تومان)', values.priceToman, errors, 'text', true,
+                  'رقم فارسی و جداکنندهٔ هزارگان هم پذیرفته می‌شود.') }}
+        {{ f.text('salePriceToman', 'قیمت فروش ویژه (تومان)', values.salePriceToman, errors, 'text', false,
+                  'باید کمتر از قیمت اصلی باشد. خالی یعنی بدون تخفیف.') }}
+        {{ f.text('stockQty', 'موجودی', values.stockQty, errors, 'text', true) }}
+
+        <div class="field{% if errors.availability %} field--invalid{% endif %}">
+          <label class="field__label" for="f-availability">وضعیت <span class="field__req">*</span></label>
+          <select class="field__input" id="f-availability" name="availability">
+            {% for a in availabilityValues %}
+              <option value="{{ a }}" {% if values.availability == a %}selected{% endif %}>
+                {{ availabilityLabels[a] }}
+              </option>
+            {% endfor %}
+          </select>
+          {% if errors.availability %}<p class="field__error">{{ errors.availability }}</p>{% endif %}
+        </div>
+
+        {{ f.text('weightGrams', 'وزن (گرم)', values.weightGrams, errors, 'text', false,
+                  'اختیاری. اگر نوشتید باید بزرگ‌تر از صفر باشد.') }}
+      </div>
+    </div>
+
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">توضیح‌ها</h2>
+      {{ f.textarea('shortDescription', 'توضیح کوتاه', values.shortDescription, errors, 2,
+                    'حداکثر ۵۰۰ نویسه. در کارت محصول دیده می‌شود.') }}
+      {{ f.textarea('description', 'توضیح کامل', values.description, errors, 8) }}
+      {{ f.textarea('compatibilityNote', 'یادداشت سازگاری', values.compatibilityNote, errors, 3,
+                    'مثلا محدودهٔ سال یا تیپ موتور.') }}
+    </div>
+
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">مشخصات فنی</h2>
+      <p class="field__hint">ردیف‌های خالی نادیده گرفته می‌شوند.</p>
+      {% if errors.specs %}<p class="field__error">{{ errors.specs }}</p>{% endif %}
+
+      <div class="spec-rows">
+        {% for key, val in values.specs %}
+          <div class="spec-row">
+            <input class="field__input" name="specKey" value="{{ key }}" aria-label="عنوان مشخصه" />
+            <input class="field__input" name="specValue" value="{{ val }}" aria-label="مقدار مشخصه" />
+          </div>
+        {% endfor %}
+        {% for i in range(0, 3) %}
+          <div class="spec-row">
+            <input class="field__input" name="specKey" value="" placeholder="عنوان" aria-label="عنوان مشخصه" />
+            <input class="field__input" name="specValue" value="" placeholder="مقدار" aria-label="مقدار مشخصه" />
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">انتشار</h2>
+      {{ f.check('isActive', 'فعال — در سایت دیده شود', values.isActive) }}
+      {{ f.check('isFeatured', 'ویژه', values.isFeatured) }}
+      {{ f.check('isNew', 'تازه', values.isNew) }}
+    </div>
+
+    <div class="admin-form__actions">
+      <button class="btn btn--primary" type="submit">
+        {{ 'ثبت محصول' if mode == 'new' else 'ذخیرهٔ تغییرها' }}
+      </button>
+      <a class="btn btn--quiet" href="/admin/catalogue/products">انصراف</a>
+    </div>
+  </form>
+
+  {% if mode == 'edit' %}
+    {# بازنشسته کردنِ بازگشت‌پذیر — راه پیشنهادی و برجسته. #}
+    <section class="admin-panel admin-panel--retire">
+      <h2 class="admin-panel__title">برداشتن از سایت</h2>
+      <p class="field__hint">
+        {% if product.is_active %}
+          محصول از سایت برداشته می‌شود ولی داده‌اش می‌ماند و هر وقت خواستید برمی‌گردد.
+          این راه پیشنهادی برای بازنشسته کردن یک قطعه است.
+        {% else %}
+          این محصول الان در سایت دیده نمی‌شود.
+        {% endif %}
+      </p>
+      <form class="inline-form" action="/admin/catalogue/products/{{ product.id }}/active" method="post">
+        <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+        <input type="hidden" name="isActive" value="{{ 'no' if product.is_active else 'yes' }}" />
+        <button class="btn {{ 'btn--warn' if product.is_active else 'btn--primary' }}" type="submit">
+          {{ 'غیرفعال کردن' if product.is_active else 'فعال کردن' }}
+        </button>
+      </form>
+    </section>
+
+    {{ danger.dangerZone(
+         '/admin/catalogue/products/' + (product.id | string) + '/delete',
+         adminCsrfToken,
+         'حذف دائمی این محصول',
+         'محصول، تصویرها و سازگاری‌های خودرو برای همیشه پاک می‌شوند. اگر فقط می‌خواهید از سایت برداشته شود، به‌جای این، «غیرفعال کردن» را بزنید.',
+         errors._delete
+       ) }}
+  {% endif %}
+</section>
+{% endblock %}

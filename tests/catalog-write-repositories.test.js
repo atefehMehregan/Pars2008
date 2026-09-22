@@ -352,6 +352,56 @@ test('موجودی صفر با وضعیت in_stock پذیرفته می‌شود 
   assert.equal(found.availability, 'in_stock');
 });
 
+/* ================================= تازه‌سازی متن جست‌وجوی برند ====== */
+
+test('تغییر نام برند، متن جست‌وجوی محصول‌هایش را از نو می‌سازد', async () => {
+  /* رگرسیون. search_text نام برند را در خود دارد؛ بدون این تازه‌سازی،
+     نام *قدیمی* در ردیف محصول می‌ماند و نتیجه‌اش این است که محصول با
+     نام تازه پیدا نمی‌شود و با نام قدیمی هنوز پیدا می‌شود. */
+  const catId = await insertCategory(db);
+  const brandId = await insertBrand(db, { name: 'والئو', slug: 'والئو' });
+  const id = await products.create(productData(catId, { brandId }));
+
+  /* ۱. نام قدیمی در متن جست‌وجو هست. */
+  assert.ok((await rowOf(id)).search_text.includes('والئو'),
+    'در آغاز باید نام برند در متن جست‌وجو باشد');
+
+  /* ۲. نام برند عوض می‌شود. */
+  await brands.update(brandId, { name: 'بوش', slug: 'والئو' });
+  const refreshed = await products.refreshSearchTextForBrand(brandId);
+  assert.equal(refreshed, 1, 'یک محصول باید تازه شده باشد');
+
+  /* ۳. نام قدیمی رفته و نام تازه آمده. */
+  const text = (await rowOf(id)).search_text;
+  assert.ok(!text.includes('والئو'), 'نام قدیمی نباید بماند');
+  assert.ok(text.includes('بوش'), 'نام تازه باید آمده باشد');
+
+  assert.equal((await products.search({ term: 'بوش' })).total, 1, 'با نام تازه پیدا می‌شود');
+  assert.equal((await products.search({ term: 'والئو' })).total, 0, 'با نام قدیمی دیگر نه');
+});
+
+test('تازه‌سازی برند، محصول برندهای دیگر را دست نمی‌زند', async () => {
+  const catId = await insertCategory(db);
+  const a = await insertBrand(db, { name: 'والئو', slug: 'والئو' });
+  const b = await insertBrand(db, { name: 'بوش', slug: 'بوش' });
+  await products.create(productData(catId, { brandId: a }));
+  const other = await products.create(productData(catId, {
+    brandId: b, slug: 'قطعه-دیگر', sku: 'BRK-200',
+  }));
+
+  await brands.update(a, { name: 'سَکس', slug: 'والئو' });
+  await products.refreshSearchTextForBrand(a);
+
+  assert.ok((await rowOf(other)).search_text.includes('بوش'),
+    'محصول برند دیگر نباید عوض شود');
+});
+
+test('تازه‌سازی برندِ بی‌محصول بی‌خطر است', async () => {
+  const brandId = await insertBrand(db);
+  assert.equal(await products.refreshSearchTextForBrand(brandId), 0);
+  assert.equal(await products.refreshSearchTextForBrand(null), 0);
+});
+
 /* =============================================== حلقهٔ دسته ========= */
 
 test('حلقهٔ الف ← ب ← الف پیش از رسیدن به SQL رد می‌شود', async () => {

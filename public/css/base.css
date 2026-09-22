@@ -325,3 +325,138 @@ code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
 @media (max-width: 640px) {
   .admin-login { margin-top: var(--gap-lg); }
 }
+
+/* ============================================================================
+ * مدیریت کاتالوگ — فاز ۳
+ * ----------------------------------------------------------------------------
+ * فقط چیزی که صفحه‌های تازه برای کار کردن لازم دارند. همان زبان بصری
+ * فاز ۲ ادامه پیدا می‌کند: متغیرهای رنگ مشترک، جدول کم‌حاشیه، فاصله‌های
+ * یکسان. هیچ قاعده‌ای اینجا روی صفحه‌های عمومی اثر نمی‌گذارد.
+ * ==========================================================================*/
+
+/* فقط برای صفحه‌خوان — برچسب ستونی که عنوان دیداری ندارد. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+.admin-headline {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--gap); flex-wrap: wrap; margin-bottom: var(--gap);
+}
+.admin-headline .admin-title { margin: 0; }
+
+/* -------------------------------------------------- ناوبری کاتالوگ */
+.admin-subnav {
+  display: flex; gap: 0.35rem; flex-wrap: wrap;
+  margin-bottom: var(--gap-lg); border-bottom: 1px solid var(--line);
+}
+.admin-subnav__link {
+  padding: 0.45rem 0.9rem; text-decoration: none;
+  color: var(--muted); border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+}
+.admin-subnav__link:hover { color: var(--ink); }
+.admin-subnav__link.is-current { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* ------------------------------------------------------------ پیام */
+.admin-flash {
+  margin: 0 0 var(--gap); padding: 0.65rem 0.9rem;
+  border: 1px solid; border-radius: var(--radius); font-size: 0.9rem;
+}
+.admin-flash--success { background: #eef7f0; border-color: #bcdcc4; color: #1c5c31; }
+.admin-flash--error   { background: #fdf0ee; border-color: #e6c4bd; color: #7d2b1c; }
+.admin-flash--warn    { background: #fdf7e8; border-color: #e8d7a8; color: #6b5310; }
+
+/* --------------------------------------------------------- فیلترها */
+.admin-filters {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--gap); align-items: end;
+  background: var(--ground); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: var(--gap); margin-bottom: var(--gap);
+}
+.admin-filters__actions { display: flex; gap: 0.4rem; }
+
+/* ----------------------------------------------------------- جدول */
+.admin-table-wrap { overflow-x: auto; }
+.admin-table__name { color: var(--ink); text-decoration: none; font-weight: 600; }
+.admin-table__name:hover { color: var(--accent); }
+.admin-table__actions { white-space: nowrap; }
+.admin-table__actions > * { vertical-align: middle; }
+.admin-table tr.is-inactive td { background: var(--surface); color: var(--muted); }
+.admin-table .price-sale { color: #1c5c31; font-weight: 600; }
+.admin-table .price-old { color: var(--muted); font-size: 0.8rem; margin-inline-start: 0.3rem; }
+
+.pill {
+  display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px;
+  font-size: 0.75rem; border: 1px solid;
+}
+.pill--on  { background: #eef7f0; border-color: #bcdcc4; color: #1c5c31; }
+.pill--off { background: var(--surface); border-color: var(--line); color: var(--muted); }
+
+.inline-form { display: inline-block; margin: 0 0.2rem; }
+
+/* ----------------------------------------------------------- دکمه */
+.btn--primary {
+  display: inline-block; background: var(--accent); color: #fff;
+  border: 1px solid var(--accent); border-radius: var(--radius);
+  padding: 0.4rem 0.9rem; font: inherit; cursor: pointer; text-decoration: none;
+}
+.btn--primary:hover { filter: brightness(1.1); }
+.btn--warn {
+  background: #fdf7e8; color: #6b5310; border: 1px solid #e8d7a8;
+  border-radius: var(--radius); padding: 0.4rem 0.9rem; font: inherit; cursor: pointer;
+}
+.btn--warn:hover { background: #fbf0d4; }
+.btn--danger {
+  background: #8d2f1e; color: #fff; border: 1px solid #8d2f1e;
+  border-radius: var(--radius); padding: 0.45rem 1rem; font: inherit; cursor: pointer;
+}
+.btn--danger:hover { filter: brightness(1.1); }
+.link-danger { color: #8d2f1e; font-size: 0.85rem; text-decoration: none; }
+.link-danger:hover { text-decoration: underline; }
+
+/* ------------------------------------------------------------ فرم */
+.admin-form { display: flex; flex-direction: column; gap: var(--gap); }
+.admin-form .admin-panel { margin: 0; }
+.admin-form__actions { display: flex; gap: 0.5rem; align-items: center; }
+
+.form-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--gap);
+}
+.admin-panel .field + .field,
+.admin-panel .form-grid + .field { margin-top: var(--gap); }
+
+.field__req { color: #8d2f1e; }
+.field__hint { margin: 0; font-size: 0.78rem; color: var(--muted); }
+.field__error { margin: 0; font-size: 0.8rem; color: #8d2f1e; }
+.field--invalid .field__input { border-color: #c98a7c; }
+.field__input--area { resize: vertical; line-height: 1.7; }
+
+.field--check { flex-direction: column; }
+.check { display: flex; align-items: center; gap: 0.45rem; font-size: 0.9rem; cursor: pointer; }
+.check input { width: 1rem; height: 1rem; }
+
+.spec-rows { display: flex; flex-direction: column; gap: 0.4rem; }
+.spec-row { display: grid; grid-template-columns: 1fr 2fr; gap: 0.4rem; }
+
+/* ------------------------------------------- بازنشستگی و حذف دائمی */
+.admin-panel--retire { margin-top: var(--gap-lg); }
+
+/* حذف دائمی عمدا از بقیهٔ صفحه جدا و کم‌رنگ‌تر از «غیرفعال کردن» است:
+   کار روزمره باید آسان باشد و کار برگشت‌ناپذیر نباید. */
+.admin-danger {
+  margin-top: var(--gap-lg); padding: var(--gap);
+  background: #fdf6f4; border: 1px solid #e6c4bd; border-radius: var(--radius);
+}
+.admin-danger__title { margin: 0 0 0.3rem; font-size: 0.95rem; color: #7d2b1c; }
+.admin-danger__text { margin: 0 0 var(--gap); font-size: 0.85rem; color: var(--muted); max-width: 62ch; }
+.admin-danger__form { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; }
+
+@media (max-width: 640px) {
+  .admin-headline { align-items: flex-start; flex-direction: column; }
+  .spec-row { grid-template-columns: 1fr; }
+  .admin-table__actions { white-space: normal; }
+}

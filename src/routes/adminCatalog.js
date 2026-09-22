@@ -1,10 +1,8 @@
 /* ============================================================================
  * routes/adminCatalog.js — مرز دسترسی بخش مدیریت کاتالوگ
  * ----------------------------------------------------------------------------
- * این فایل در این مرحله عمدا *فقط* مرز است. هیچ فرم، کنترلر یا عملیات
- * واقعی CRUD اینجا نیست؛ آن‌ها در گام بعد می‌آیند. دلیلش ساده است: اگر
- * اول رفتار را بسازیم و بعد قفل را، بازه‌ای وجود دارد که مسیر نوشتن باز
- * است. برعکسش چنین بازه‌ای ندارد.
+ * این فایل فقط مرز و نگاشت مسیر است. رفتار در کنترلر زندگی می‌کند و
+ * SQL در مخزن؛ اینجا نه کوئری هست، نه اعتبارسنجی، نه منطق امنیتی.
  *
  * --------------------------------------------------------------------------
  * ترتیب میان‌افزارها — همان ثابت امنیتی فاز ۲، بدون هیچ تغییری:
@@ -31,20 +29,10 @@
  * requireAdminCsrf فقط توکن گره‌خورده به همین نشست را می‌پذیرد.
  * ==========================================================================*/
 import express from 'express';
+import { createAdminCatalogController } from '../controllers/adminCatalogController.js';
 
 /* موجودیت‌هایی که شکل مسیرهایشان یکسان است. */
 const ENTITIES = ['products', 'categories', 'brands'];
-
-/**
- * پاسخ موقت این گام.
- * فقط اثبات می‌کند که درخواست از مرز اجازهٔ دسترسی رد شده است. در گام
- * بعد جایش را کنترلر و قالب واقعی می‌گیرد.
- */
-function placeholder(name) {
-  return function handlePlaceholder(req, res) {
-    res.status(200).json({ ok: true, placeholder: name });
-  };
-}
 
 /**
  * مسیریاب مدیریت کاتالوگ.
@@ -70,6 +58,7 @@ export function createAdminCatalogRouter({
   }
 
   const router = express.Router();
+  const c = createAdminCatalogController({ repositories, audit });
 
   /* --- قفل، پیش از هر مسیری --- */
   router.use(requireAdminAuth);
@@ -79,18 +68,34 @@ export function createAdminCatalogRouter({
 
   router.get('/', (req, res) => res.redirect(302, '/admin/catalogue/products'));
 
-  for (const entity of ENTITIES) {
-    router.get(`/${entity}`, placeholder(`${entity}.index`));
-    router.get(`/${entity}/new`, placeholder(`${entity}.new`));
-    router.post(`/${entity}`, placeholder(`${entity}.create`));
-    router.get(`/${entity}/:id/edit`, placeholder(`${entity}.edit`));
-    router.post(`/${entity}/:id`, placeholder(`${entity}.update`));
-    router.post(`/${entity}/:id/delete`, placeholder(`${entity}.delete`));
-    router.post(`/${entity}/:id/active`, placeholder(`${entity}.active`));
-  }
-
+  /* محصول‌ها */
+  router.get('/products', c.productIndex);
+  router.get('/products/new', c.productNew);
+  router.post('/products', c.productCreate);
+  router.get('/products/:id/edit', c.productEdit);
+  router.post('/products/:id', c.productUpdate);
+  router.post('/products/:id/delete', c.productDelete);
+  router.post('/products/:id/active', c.productSetActive);
   /* ویرایش سریع موجودی — فقط برای محصول معنا دارد. */
-  router.post('/products/:id/stock', placeholder('products.stock'));
+  router.post('/products/:id/stock', c.productStock);
+
+  /* دسته‌ها */
+  router.get('/categories', c.categoryIndex);
+  router.get('/categories/new', c.categoryNew);
+  router.post('/categories', c.categoryCreate);
+  router.get('/categories/:id/edit', c.categoryEdit);
+  router.post('/categories/:id', c.categoryUpdate);
+  router.post('/categories/:id/delete', c.categoryDelete);
+  router.post('/categories/:id/active', c.categorySetActive);
+
+  /* برندها */
+  router.get('/brands', c.brandIndex);
+  router.get('/brands/new', c.brandNew);
+  router.post('/brands', c.brandCreate);
+  router.get('/brands/:id/edit', c.brandEdit);
+  router.post('/brands/:id', c.brandUpdate);
+  router.post('/brands/:id/delete', c.brandDelete);
+  router.post('/brands/:id/active', c.brandSetActive);
 
   return router;
 }

@@ -175,13 +175,32 @@ const POST_ROUTES = [
   '/admin/catalogue/brands/1/active',
 ];
 
+/**
+ * درخواست از مرز رد شده است؟
+ *
+ * عمدا کد وضعیت دقیق سنجیده نمی‌شود. این فایل مرزِ *اجازهٔ دسترسی* را
+ * می‌سنجد، نه رفتار کنترلر را؛ رفتار جای دیگری آزموده می‌شود
+ * (admin-catalog-routes.test.js). گره زدن این آزمون به «۲۰۰»، آن را به
+ * جزئیاتی وصل می‌کرد که ربطی به امنیت ندارند و با هر تغییر رفتار
+ * می‌شکست — بی‌آنکه چیزی دربارهٔ مرز گفته باشد.
+ *
+ * آنچه واقعا مهم است: نه ۴۰۱، نه ۴۰۳، و نه هدایت به صفحهٔ ورود.
+ */
+function assertPassedBoundary(res, path) {
+  assert.notEqual(res.status, 401, `${path} نباید مدیرِ واردشده را رد کند`);
+  assert.notEqual(res.status, 403, `${path} نباید توکن معتبر را رد کند`);
+  if (res.status === 302 || res.status === 303) {
+    assert.notEqual(res.headers.get('location'), '/admin/login',
+      `${path} نباید مدیرِ واردشده را به صفحهٔ ورود بفرستد`);
+  }
+}
+
 /* ======================================== ۱. دسترسی مدیرِ واردشده ==== */
 
 test('مدیر واردشده به همهٔ صفحه‌های کاتالوگ دسترسی دارد', async () => {
   const { jar } = await login();
   for (const path of GET_PAGES) {
-    const res = await get(path, jar);
-    assert.equal(res.status, 200, `${path} باید ۲۰۰ بدهد`);
+    assertPassedBoundary(await get(path, jar), path);
   }
 });
 
@@ -197,8 +216,7 @@ test('مدیر واردشده با توکن معتبرِ همین نشست می�
   const { jar } = await login();
   const csrf = await sessionCsrf(jar);
   for (const path of POST_ROUTES) {
-    const res = await post(path, { jar, csrf });
-    assert.equal(res.status, 200, `${path} با توکن معتبر باید بگذرد`);
+    assertPassedBoundary(await post(path, { jar, csrf }), path);
   }
 });
 

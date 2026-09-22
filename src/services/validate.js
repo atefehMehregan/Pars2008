@@ -168,6 +168,66 @@ export function salePriceRule(salePrice, price, { label = 'قیمت فروش و�
   return null;
 }
 
+/* ---------------------------------------------------- مشخصات فنی ------- */
+
+/**
+ * ردیف‌های کلید/مقدارِ فرم را به یک شیء تخت تبدیل می‌کند.
+ *
+ * فرم مشخصات فنی چند ردیف دارد و مرورگر آن‌ها را به‌صورت دو آرایهٔ
+ * هم‌اندازه می‌فرستد. ردیفِ با کلیدِ خالی حذف می‌شود — کاربر ردیف اضافه
+ * را خالی می‌گذارد و انتظار ندارد ذخیره شود.
+ *
+ * ساختار تخت می‌ماند: مقدارها رشته‌اند و تو در تو نمی‌شوند، چون ستون
+ * specs برای نمایش در جدول مشخصات است، نه برای دادهٔ ساختاریافته.
+ */
+export function specsField(keys, values, {
+  label = 'مشخصات فنی', maxRows = 40, maxKey = 60, maxValue = 300,
+} = {}) {
+  const toArray = (v) => (Array.isArray(v) ? v : (v === undefined || v === null ? [] : [v]));
+  const k = toArray(keys);
+  const v = toArray(values);
+
+  if (k.length > maxRows) {
+    return { value: {}, error: `${label} نباید بیشتر از ${faDigits(maxRows)} ردیف باشد.` };
+  }
+
+  const out = {};
+  for (let i = 0; i < k.length; i++) {
+    const key = cleanText(k[i]);
+    if (!key) continue;                       // ردیف خالی، نه خطا
+    if (key.length > maxKey) {
+      return { value: out, error: `عنوان مشخصه نباید بیشتر از ${faDigits(maxKey)} نویسه باشد.` };
+    }
+    const val = cleanText(v[i] ?? '');
+    if (val.length > maxValue) {
+      return { value: out, error: `مقدار «${key}» نباید بیشتر از ${faDigits(maxValue)} نویسه باشد.` };
+    }
+    out[key] = val;
+  }
+  return { value: out, error: null };
+}
+
+/* ------------------------------------------------------- هشدار نرم ----- */
+
+/**
+ * ناسازگاری ظاهریِ موجودی و وضعیت.
+ *
+ * این عمدا خطا نیست و ذخیره را متوقف نمی‌کند: «سفارشی» و «منسوخ» واقعا
+ * مستقل از عدد موجودی‌اند، و قفل کردن مدیر پشت قاعده‌ای که خودش
+ * استثناهای درست دارد، آزار است. فقط تذکر داده می‌شود.
+ *
+ * @returns {string|null} متن هشدار، یا null
+ */
+export function stockWarning(stockQty, availability) {
+  if (stockQty === 0 && availability === 'in_stock') {
+    return 'موجودی صفر است ولی وضعیت «موجود» انتخاب شده — ذخیره شد، ولی بررسی کنید.';
+  }
+  if (stockQty > 0 && availability === 'out_of_stock') {
+    return 'موجودی بیشتر از صفر است ولی وضعیت «ناموجود» انتخاب شده — ذخیره شد، ولی بررسی کنید.';
+  }
+  return null;
+}
+
 /* ---------------------------------------------------- جمع‌کنندهٔ خطا ---- */
 
 /**

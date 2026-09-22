@@ -503,8 +503,63 @@ export function createProductRepository(db) {
     }
   }
 
+  /**
+   * متن جست‌وجوی همهٔ محصول‌های یک برند را از نو می‌سازد.
+   *
+   * چرا لازم است؟ search_text نام برند را در خود دارد. با تغییر نام
+   * برند، آن رشته در ردیف محصول‌ها کهنه می‌ماند و نتیجه‌اش این است که
+   * محصول همچنان با نام *قدیمی* پیدا می‌شود و با نام تازه نه — خرابی‌ای
+   * که بی‌سروصداست و تا شکایت مشتری دیده نمی‌شود.
+   *
+   * چرا در همین مخزن و نه در مخزن برند؟ چون SQLِ جدول products اینجا
+   * زندگی می‌کند. مسیر تغییر نام برند این تابع را صدا می‌زند؛ هیچ
+   * کوئریِ محصولی به مخزن برند منتقل نمی‌شود.
+   *
+   * چرا در JS بازسازی می‌شود و نه با یک UPDATE ساده؟ چون buildSearchText
+   * نرمال‌سازی فارسی می‌کند (ی/ک عربی، نیم‌فاصله، رقم) که در SQL بدون
+   * تابع سفارشی قابل تکرار نیست. مقدارها ساخته و در *یک* کوئری با
+   * unnest نوشته می‌شوند، نه یک UPDATE به ازای هر ردیف.
+   *
+   * @returns {Promise<number>} شمار ردیف‌های تازه‌شده
+   */
+  async function refreshSearchTextForBrand(brandId) {
+    if (!brandId) return 0;
+
+    const brandName = await brandNameFor(brandId);
+    const res = await db.query(
+      `SELECT id, name, sku, oem_number, short_description
+       FROM products WHERE brand_id = $1`, [brandId]
+    );
+    if (res.rows.length === 0) return 0;
+
+    const ids = [];
+    const texts = [];
+    for (const row of res.rows) {
+      ids.push(row.id);
+      texts.push(buildSearchText({
+        name: row.name,
+        sku: row.sku,
+        oemNumber: row.oem_number,
+        brandName,
+        shortDescription: row.short_description,
+      }));
+    }
+
+    const updated = await db.query(
+      `UPDATE products AS p
+          SET search_text = v.search_text, updated_at = now()
+         FROM (SELECT unnest($1::bigint[]) AS id,
+                      unnest($2::text[])   AS search_text) AS v
+        WHERE p.id = v.id
+        RETURNING p.id`,
+      [ids, texts]
+    );
+    return updated.rows.length;
+  }
+
   return {
     list, findBySlug, imagesFor, vehiclesFor, search,
     adminList, findById, create, update, remove, setActive, adjustStock,
+    refreshSearchTextForBrand,
   };
 }
