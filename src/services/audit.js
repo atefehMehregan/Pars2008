@@ -26,6 +26,13 @@ export const AUDIT_ACTIONS = {
   PRODUCT_ACTIVE_CHANGED: 'catalog.product.active',
   PRODUCT_STOCK_CHANGED: 'catalog.product.stock',
 
+  /* تصویر محصول — فاز ۵. «افزودن» از «حذف» جدا می‌ماند چون دومی
+     برگشت‌ناپذیر است و گزارش بعدی باید این دو را از هم جدا کند. */
+  PRODUCT_IMAGE_ADDED: 'catalog.product.image.added',
+  PRODUCT_IMAGE_UPDATED: 'catalog.product.image.updated',
+  PRODUCT_IMAGE_PRIMARY: 'catalog.product.image.primary',
+  PRODUCT_IMAGE_DELETED: 'catalog.product.image.deleted',
+
   CATEGORY_CREATED: 'catalog.category.created',
   CATEGORY_UPDATED: 'catalog.category.updated',
   CATEGORY_DELETED: 'catalog.category.deleted',

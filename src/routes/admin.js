@@ -18,8 +18,11 @@ import { requireCsrf } from '../middleware/security.js';
 import { adminNoStore, createAdminAuthMiddleware } from '../middleware/adminAuth.js';
 import { createAdminAuthController } from '../controllers/adminAuthController.js';
 import { createAdminCatalogRouter } from './adminCatalog.js';
+import { createAdminProductImagesRouter } from './adminProductImages.js';
 
-export function createAdminRouter({ authService, audit, loginLimiter, repositories = {} }) {
+export function createAdminRouter({
+  authService, audit, loginLimiter, uploadLimiter, repositories = {}, storage = null,
+}) {
   const router = express.Router();
   const { loadAdminSession, requireAdminAuth, requireAdminCsrf } =
     createAdminAuthMiddleware(authService);
@@ -38,12 +41,32 @@ export function createAdminRouter({ authService, audit, loginLimiter, repositori
   router.get('/', requireAdminAuth, c.dashboard);
   router.post('/logout', requireAdminAuth, requireAdminCsrf, c.submitLogout);
 
+  /* مدیریت تصویر محصول — پیش از مسیریاب کاتالوگ سوار می‌شود تا
+     /products/:id/images زودتر تطبیق بخورد؛ بقیهٔ مسیرها دست‌نخورده
+     به مسیریاب بعدی می‌رسند.
+
+     فقط وقتی سوار می‌شود که وابستگی‌هایش واقعا تزریق شده باشند. در
+     تولید همیشه هستند (repositories/index.js و لایهٔ ذخیره‌سازی).
+     آزمونی که مجموعهٔ ناقصی از مخزن‌ها می‌دهد، این مسیرها را اصلا
+     نمی‌گیرد — یعنی ۴۰۴، نه مسیرِ بی‌محافظ. */
+  if (repositories.productImages && storage) {
+    router.use('/catalogue', createAdminProductImagesRouter({
+      repositories,
+      storage,
+      audit,
+      requireAdminAuth,
+      requireAdminCsrf,
+      uploadLimiter,
+    }));
+  }
+
   /* مدیریت کاتالوگ. همان دو میان‌افزارِ ساخته‌شده در بالا پایین داده
      می‌شوند — نه ساخته‌شدن دوباره. یک پیاده‌سازی و یک نمونه، تا رفتار
      مرز در همه‌جای بخش مدیر دقیقا یکی باشد. */
   router.use('/catalogue', createAdminCatalogRouter({
     repositories,
     audit,
+    storage,
     requireAdminAuth,
     requireAdminCsrf,
   }));

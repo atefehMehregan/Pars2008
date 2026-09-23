@@ -128,10 +128,27 @@ export const config = {
     /* فقط همین نوع‌ها پذیرفته می‌شوند و تشخیص از روی بایت‌های ابتدایی فایل
        انجام می‌شود، نه پسوند نام فایل. */
     allowedImageMime: ['image/jpeg', 'image/png', 'image/webp'],
+
+    /* ------------------------------------------------ تصویر محصول (فاز ۵) */
+    /* سقف تعداد فایل در یک درخواست. multer خودش این را اعمال می‌کند، پس
+       فایل نهم اصلا خوانده نمی‌شود. */
+    maxFilesPerRequest: int('UPLOAD_MAX_FILES_PER_REQUEST', 8),
+    /* سقف تصویر برای هر محصول. گالری محصول یدکی به بیش از این نیاز ندارد. */
+    maxImagesPerProduct: int('UPLOAD_MAX_IMAGES_PER_PRODUCT', 8),
+    /* کمینهٔ ضلع بزرگ‌تر تصویر ورودی. زیر این اندازه، مشتق ۴۰۰ پیکسلیِ
+       کارت محصول پر نمی‌شود و تصویر وسط یک بوم سفید شناور می‌ماند. */
+    minImageDimension: int('UPLOAD_MIN_IMAGE_DIMENSION', 400),
+    /* سقف تعداد پیکسل تصویر ورودی. پیش‌فرض خود sharp حدود ۲۶۸ مگاپیکسل
+       است که برای فایل ۵ مگابایتیِ فشرده بیش از حد سخاوتمند است: یک PNG
+       کوچک می‌تواند به گیگابایت‌ها حافظه باز شود. این سقف صریح، همان
+       حملهٔ «بمب فشرده‌سازی» را می‌بندد. */
+    maxImagePixels: int('UPLOAD_MAX_IMAGE_PIXELS', 50_000_000),
   },
 
   images: {
     watermarkEnabled: bool('WATERMARK_ENABLED', true),
+    /* نشانِ برند که روی مشتق‌ها می‌نشیند. فایل پروژه است، نه ورودی کاربر. */
+    watermarkFile: process.env.WATERMARK_FILE || path.join(ROOT, 'public', 'img', 'logo-watermark.svg'),
     /* اندازه‌های مشتق — مربع ۱:۱، چون قطعات نسبت ابعادی بسیار متفاوتی دارند. */
     sizes: [
       { name: 'thumb', width: 160 },

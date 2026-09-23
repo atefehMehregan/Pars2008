@@ -22,6 +22,20 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { config } from '../config/index.js';
 import { randomFilename } from '../middleware/security.js';
+import { storage as defaultStorage } from './storage.js';
+
+/**
+ * گزینه‌های ورودی sharp.
+ *
+ * limitInputPixels صریح است چون پیش‌فرض خودِ sharp (حدود ۲۶۸ مگاپیکسل)
+ * برای آپلود ۵ مگابایتی بیش از حد سخاوتمند است: یک PNG کوچکِ فشرده
+ * می‌تواند به گیگابایت‌ها حافظه باز شود. این سقف، همان حمله را می‌بندد
+ * پیش از آنکه بافر رمزگشایی شود.
+ */
+const inputOptions = () => ({
+  failOn: 'error',
+  limitInputPixels: config.uploads.maxImagePixels,
+});
 
 /** نسخه sharp و کتابخانه‌های زیرین — برای بررسی سلامت محیط. */
 export function imagingInfo() {
@@ -38,8 +52,52 @@ export function imagingInfo() {
  * اگر بافر تصویر معتبر نباشد خطا می‌دهد — که خودش یک لایه اعتبارسنجی است.
  */
 export async function readImageMetadata(buffer) {
-  const meta = await sharp(buffer).metadata();
+  const meta = await sharp(buffer, inputOptions()).metadata();
   return { format: meta.format, width: meta.width, height: meta.height, hasAlpha: meta.hasAlpha };
+}
+
+/**
+ * بررسی اینکه آیا این بافر *قابل پردازش* است — گام پس از تشخیص نوع از
+ * روی بایت‌های ابتدایی و پیش از ساختن مشتق‌ها.
+ *
+ * چرا جدا از validateUploadedImage؟ چون آن یکی بدون رمزگشایی کار می‌کند
+ * (اندازه و magic bytes) و این یکی باید ابعاد را بداند، که یعنی باید
+ * تصویر را واقعا باز کند. دو لایه، دو هزینه، به همان ترتیب.
+ *
+ * هرگز استثنا پرتاب نمی‌کند؛ مثل بقیهٔ اعتبارسنجی‌های پروژه
+ * { ok, ... } برمی‌گرداند.
+ *
+ * @returns {Promise<{ok:true, meta:object} | {ok:false, message:string}>}
+ */
+export async function inspectUploadedImage(buffer) {
+  let meta;
+  try {
+    meta = await readImageMetadata(buffer);
+  } catch (err) {
+    /* sharp برای بمب فشرده‌سازی همین‌جا شکست می‌خورد — پیش از رمزگشایی کامل. */
+    if (/pixel limit/i.test(err.message || '')) {
+      return { ok: false, message: 'ابعاد تصویر بیش از حد بزرگ است.' };
+    }
+    return { ok: false, message: 'فایل تصویر معتبر نیست.' };
+  }
+
+  if (!meta.format || !meta.width || !meta.height) {
+    return { ok: false, message: 'فایل تصویر معتبر نیست.' };
+  }
+
+  const longest = Math.max(meta.width, meta.height);
+  if (longest < config.uploads.minImageDimension) {
+    return {
+      ok: false,
+      message: `ضلع بزرگ‌تر تصویر باید دست‌کم ${config.uploads.minImageDimension} پیکسل باشد.`,
+    };
+  }
+
+  if (meta.width * meta.height > config.uploads.maxImagePixels) {
+    return { ok: false, message: 'ابعاد تصویر بیش از حد بزرگ است.' };
+  }
+
+  return { ok: true, meta };
 }
 
 /**
@@ -48,7 +106,7 @@ export async function readImageMetadata(buffer) {
  * بوم مربع با حاشیه یکسان می‌نشینند تا شبکه محصولات منظم بماند.
  */
 async function renderSize(buffer, width, { watermark } = {}) {
-  let pipeline = sharp(buffer, { failOn: 'error' })
+  let pipeline = sharp(buffer, inputOptions())
     .rotate()                       // اعمال جهت EXIF پیش از حذف فراداده
     .resize(width, width, {
       fit: 'contain',
@@ -68,22 +126,21 @@ async function renderSize(buffer, width, { watermark } = {}) {
 /**
  * یک تصویر محصول را پردازش می‌کند: اصل را ذخیره و مشتق‌ها را می‌سازد.
  *
+ * بایت‌ها از راه لایهٔ ذخیره‌سازی نوشته می‌شوند، نه مستقیم روی دیسک:
+ * این تابع نمی‌داند فایل کجا می‌نشیند و نباید بداند.
+ *
  * @param {Buffer} buffer بایت‌های تصویر (باید از پیش اعتبارسنجی شده باشد)
  * @param {object} [opts]
  * @param {Buffer} [opts.watermark] PNG شفاف لوگو؛ نبودنش یعنی بدون واترمارک
+ * @param {object} [opts.storage] لایهٔ ذخیره‌سازی؛ پیش‌فرض نمونهٔ محلی
  * @returns {Promise<{id:string, originalPath:string, derivatives:object[]}>}
  */
-export async function processProductImage(buffer, { watermark = null } = {}) {
+export async function processProductImage(buffer, { watermark = null, storage = defaultStorage } = {}) {
   const meta = await readImageMetadata(buffer);
   if (!meta.format) throw new Error('فایل تصویر معتبر نیست.');
 
   const id = randomFilename().replace(/\.[^.]*$/, '');
-  const originalPath = path.join(config.storage.originals, `${id}.${meta.format}`);
-  await fs.mkdir(config.storage.originals, { recursive: true });
-  await fs.writeFile(originalPath, buffer);
-
-  const outDir = path.join(config.storage.products, id);
-  await fs.mkdir(outDir, { recursive: true });
+  const originalPath = await storage.putOriginal(id, buffer, meta.format);
 
   const useWatermark = config.images.watermarkEnabled && watermark;
   const derivatives = [];
@@ -101,15 +158,13 @@ export async function processProductImage(buffer, { watermark = null } = {}) {
     const jpeg = await (await renderSize(buffer, size.width, { watermark: mark }))
       .jpeg({ quality: config.images.jpegQuality, mozjpeg: true }).toBuffer();
 
-    const webpPath = path.join(outDir, `${size.name}.webp`);
-    const jpegPath = path.join(outDir, `${size.name}.jpg`);
-    await fs.writeFile(webpPath, webp);
-    await fs.writeFile(jpegPath, jpeg);
+    await storage.putDerivative(id, size.name, 'webp', webp);
+    await storage.putDerivative(id, size.name, 'jpg', jpeg);
 
     derivatives.push({
       size: size.name, width: size.width,
-      webp: `/media/products/${id}/${size.name}.webp`,
-      jpeg: `/media/products/${id}/${size.name}.jpg`,
+      webp: storage.publicUrl(id, size.name, 'webp'),
+      jpeg: storage.publicUrl(id, size.name, 'jpg'),
       webpBytes: webp.length, jpegBytes: jpeg.length,
     });
   }

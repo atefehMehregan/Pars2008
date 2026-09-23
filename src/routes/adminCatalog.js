@@ -46,7 +46,7 @@ const ENTITIES = ['products', 'categories', 'brands'];
  * @param {Function} deps.requireAdminCsrf از createAdminAuthMiddleware والد
  */
 export function createAdminCatalogRouter({
-  repositories = {}, audit = null, requireAdminAuth, requireAdminCsrf,
+  repositories = {}, audit = null, storage = null, requireAdminAuth, requireAdminCsrf,
 } = {}) {
   if (typeof requireAdminAuth !== 'function' || typeof requireAdminCsrf !== 'function') {
     throw new Error('adminCatalog: میان‌افزار احراز هویت باید از والد تزریق شود');
@@ -58,7 +58,7 @@ export function createAdminCatalogRouter({
   }
 
   const router = express.Router();
-  const c = createAdminCatalogController({ repositories, audit });
+  const c = createAdminCatalogController({ repositories, audit, storage });
 
   /* --- قفل، پیش از هر مسیری --- */
   router.use(requireAdminAuth);

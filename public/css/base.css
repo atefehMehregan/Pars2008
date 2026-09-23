@@ -1167,6 +1167,28 @@ a:hover { color: var(--c-brand-strong); }
 .spec-rows { display: flex; flex-direction: column; gap: 0.4rem; }
 .spec-row { display: grid; grid-template-columns: 1fr 2fr; gap: 0.4rem; }
 
+/* ------------------------------------------------- تصویر محصول */
+/* شبکهٔ مدیریت تصویر. همان زبان بصری پنل: کارت کم‌حاشیه، خط نازک،
+   بدون جلوهٔ اضافه. */
+.image-grid {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: var(--gap);
+}
+.image-card {
+  border: 1px solid var(--line); border-radius: var(--radius);
+  overflow: hidden; background: var(--ground);
+}
+.image-card.is-primary { border-color: var(--accent); }
+.image-card__media { position: relative; aspect-ratio: 1 / 1; background: var(--surface); }
+.image-card__media img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.image-card__badge { position: absolute; inset-block-start: 0.4rem; inset-inline-start: 0.4rem; }
+.image-card__body { padding: 0.6rem; display: flex; flex-direction: column; gap: 0.4rem; }
+.image-card__meta { margin: 0; font-size: 0.78rem; color: var(--muted); }
+.image-card__form { display: flex; gap: 0.3rem; }
+.image-card__form .field__input { flex: 1 1 auto; min-width: 0; font-size: 0.85rem; }
+.image-card__actions { display: flex; gap: 0.3rem; flex-wrap: wrap; align-items: center; }
+
 /* ------------------------------------------- بازنشستگی و حذف دائمی */
 .admin-panel--retire { margin-top: var(--gap-lg); }
 

@@ -149,6 +149,16 @@
   </form>
 
   {% if mode == 'edit' %}
+    {# تصویرها صفحهٔ خودشان را دارند: آپلود multipart با بدنهٔ فرمِ
+       معمولیِ محصول قاطی نمی‌شود، و هر کدام سقف و اعتبارسنجی خودش را دارد. #}
+    <section class="admin-panel admin-panel--retire">
+      <h2 class="admin-panel__title">تصویرهای محصول</h2>
+      <p class="field__hint">
+        بارگذاری، ترتیب، متن جایگزین و انتخاب تصویر اصلی در صفحهٔ جداگانه انجام می‌شود.
+      </p>
+      <a class="btn btn--quiet" href="/admin/catalogue/products/{{ product.id }}/images">مدیریت تصویرها</a>
+    </section>
+
     {# بازنشسته کردنِ بازگشت‌پذیر — راه پیشنهادی و برجسته. #}
     <section class="admin-panel admin-panel--retire">
       <h2 class="admin-panel__title">برداشتن از سایت</h2>

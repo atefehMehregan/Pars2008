@@ -12,7 +12,7 @@ import nunjucks from 'nunjucks';
 import path from 'node:path';
 import { config, ROOT } from './config/index.js';
 import { extraSecurityHeaders, csrfToken, notFound, errorHandler } from './middleware/security.js';
-import { generalLimiter, loginLimiter } from './middleware/rateLimit.js';
+import { generalLimiter, loginLimiter, uploadLimiter } from './middleware/rateLimit.js';
 import { healthRouter } from './routes/health.js';
 import { createPageRouter } from './routes/pages.js';
 import { createCatalogRouter } from './routes/catalog.js';
@@ -24,6 +24,7 @@ import { createAdminSessionRepository } from './db/repositories/adminSessions.js
 import { createLoginAttemptRepository } from './db/repositories/loginAttempts.js';
 import * as productionRepositories from './db/repositories/index.js';
 import * as productionDb from './db/index.js';
+import { storage as defaultStorage } from './services/storage.js';
 import { faDigits, formatToman, formatJalali } from './services/format.js';
 
 /**
@@ -35,7 +36,9 @@ import { faDigits, formatToman, formatJalali } from './services/format.js';
  *   PGlite تزریق می‌کنند — همان الگوی فاز ۱الف، تا لایهٔ اتصال
  *   تولید (src/db/index.js) دست‌نخورده بماند.
  */
-export function createApp({ repositories = productionRepositories, db = null } = {}) {
+export function createApp({
+  repositories = productionRepositories, db = null, storage = defaultStorage,
+} = {}) {
   const app = express();
 
   /* پشت پراکسی (IIS/ARR یا Nginx) آی‌پی واقعی در X-Forwarded-For است. */
@@ -148,6 +151,10 @@ export function createApp({ repositories = productionRepositories, db = null } =
     authService: adminAuthService,
     audit: adminAudit,
     loginLimiter,
+    uploadLimiter,
+    /* لایهٔ ذخیره‌سازی تصویر. پیش‌فرض، پیاده‌سازی فایل‌سیستم محلی
+       (توسعه/پیش‌نمایش). جایگزینی‌اش فقط همان ماژول را عوض می‌کند. */
+    storage,
     /* همان مخزن‌هایی که کاتالوگ عمومی استفاده می‌کند — از همان مسیر
        تزریق. بخش مدیر لایهٔ دسترسی به دادهٔ جداگانه‌ای نمی‌سازد. */
     repositories,

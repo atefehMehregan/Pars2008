@@ -28,8 +28,8 @@ import {
 const BASE = '/admin/catalogue';
 const PER_PAGE = 20;
 
-export function createAdminCatalogController({ repositories, audit }) {
-  const { products, categories, brands } = repositories;
+export function createAdminCatalogController({ repositories, audit, storage = null }) {
+  const { products, categories, brands, productImages = null } = repositories;
 
   /* ------------------------------------------------------- کمکی‌ها ---- */
 
@@ -309,6 +309,24 @@ export function createAdminCatalogController({ repositories, audit }) {
         });
       }
 
+      /* ---------------------------------------------- نظافت فایل‌ها --
+       * شناسهٔ تصویرها *پیش از* حذف خوانده می‌شود، چون ON DELETE CASCADE
+       * ردیف‌ها را می‌برد و بعد از آن دیگر راهی برای دانستن نام فایل‌ها
+       * نیست.
+       *
+       * ترتیب عمدی است: اول پایگاه داده، بعد دیسک.
+       *   - اگر حذف ردیف شکست بخورد، هیچ فایلی پاک نشده و همه‌چیز سالم است.
+       *   - اگر پاک کردن فایل شکست بخورد، فایلِ یتیم می‌ماند: فضای
+       *     هدررفته، ولی هیچ ارجاع شکسته‌ای در ویترین نیست.
+       * ترتیب برعکس، حالت بدتر را می‌ساخت.
+       * -------------------------------------------------------------- */
+      const imageIds = productImages
+        ? await productImages.imageIdsForProduct(row.id).catch((err) => {
+          console.error('[catalog] خواندن شناسهٔ تصویرها شکست خورد:', err.message);
+          return [];
+        })
+        : [];
+
       try {
         await products.remove(row.id);
       } catch (err) {
@@ -316,6 +334,14 @@ export function createAdminCatalogController({ repositories, audit }) {
         if (!code) return next(err);
         return res.redirect(303, `${BASE}/products/${row.id}/edit?error=${code}`);
       }
+
+      if (storage && imageIds.length) {
+        for (const imageId of imageIds) {
+          await storage.removeImage(imageId).catch((err) =>
+            console.error('[catalog] فایل یتیم ماند:', imageId, err.message));
+        }
+      }
+
       await record(req, AUDIT_ACTIONS.PRODUCT_DELETED, 'product', row.id, ['id']);
       res.redirect(303, `${BASE}/products?flash=deleted`);
     } catch (err) { next(err); }

@@ -1,0 +1,155 @@
+{% extends "layouts/admin.njk" %}
+
+{# ============================================================================
+   مدیریت تصویر محصول.
+
+   بدون هیچ جاوااسکریپتی. جابه‌جایی ترتیب با دکمهٔ «بالا/پایین» انجام
+   می‌شود و هر دکمه، فهرستِ *کاملِ* ترتیب تازه را به‌صورت فیلد پنهان
+   می‌فرستد — سرور همان را می‌نویسد. برای حداکثر هشت تصویر، این از
+   کشیدن-و-رها کردنِ وابسته به جاوااسکریپت هم ساده‌تر است و هم قابل
+   استفاده با صفحه‌کلید.
+   ========================================================================= #}
+
+{% block content %}
+<section class="admin-section">
+  <div class="admin-headline">
+    <h1 class="admin-title">تصویرهای محصول</h1>
+    <a class="btn btn--quiet" href="/admin/catalogue/products/{{ product.id }}/edit">بازگشت به ویرایش محصول</a>
+  </div>
+
+  <p class="admin-lede">{{ product.name }}</p>
+
+  {% include "partials/admin-flash.njk" %}
+
+  {% if uploadErrors.length %}
+    <div class="admin-flash admin-flash--error" role="alert">
+      <p style="margin:0 0 .4rem">این فایل‌ها ذخیره نشدند:</p>
+      <ul style="margin:0; padding-inline-start:1.2rem">
+        {% for e in uploadErrors %}<li>{{ e }}</li>{% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  {# ------------------------------------------------------------ آپلود #}
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">
+      افزودن تصویر
+      (<span class="num">{{ imageCount | faDigits }}</span> از
+      <span class="num">{{ maxImages | faDigits }}</span>)
+    </h2>
+
+    {% if imageCount >= maxImages %}
+      <p class="admin-panel__empty">
+        ظرفیت تصویرهای این محصول پر است. برای افزودن تصویر تازه، اول یکی را حذف کنید.
+      </p>
+    {% else %}
+      <form class="admin-form" method="post"
+            action="/admin/catalogue/products/{{ product.id }}/images"
+            enctype="multipart/form-data">
+        {# این فیلد باید *پیش از* کادر فایل بیاید: Multer بخش‌ها را به
+           ترتیب می‌خواند، و اگر سقف حجم وسط فایل بشکند، فیلدهای بعد از
+           آن هرگز تجزیه نمی‌شوند. #}
+        <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+
+        <div class="field">
+          <label class="field__label" for="f-images">فایل تصویر</label>
+          <input class="field__input" id="f-images" name="images" type="file"
+                 accept="image/jpeg,image/png,image/webp" multiple required />
+          <p class="field__hint">
+            JPEG، PNG یا WebP — حداکثر <span class="num">{{ maxMegabytes | faDigits }}</span> مگابایت
+            برای هر فایل، حداکثر <span class="num">{{ maxFiles | faDigits }}</span> فایل در هر بار.
+            ضلع بزرگ‌تر دست‌کم <span class="num">{{ minDimension | faDigits }}</span> پیکسل.
+            نوع فایل از روی محتوا بررسی می‌شود، نه پسوند نام.
+          </p>
+        </div>
+
+        <div class="admin-form__actions">
+          <button class="btn btn--primary" type="submit">بارگذاری</button>
+        </div>
+      </form>
+    {% endif %}
+  </div>
+
+  {# ------------------------------------------------------------ فهرست #}
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">تصویرهای ثبت‌شده</h2>
+
+    {% if images.length %}
+      <ul class="image-grid">
+        {% for img in images %}
+          {# شمارهٔ همین قلم را نگه می‌داریم: داخل حلقهٔ تودرتوی پایین،
+             loop به حلقهٔ درونی اشاره می‌کند و دیگر در دسترس نیست. #}
+          {% set outerIndex = loop.index0 %}
+          {% set isFirst = loop.first %}
+          <li class="image-card{% if img.is_primary %} is-primary{% endif %}">
+            <div class="image-card__media">
+              <img src="{{ img.cardUrl }}" alt="{{ img.alt_text or product.name }}"
+                   width="400" height="400" loading="lazy" />
+              {% if img.is_primary %}<span class="pill pill--on image-card__badge">اصلی</span>{% endif %}
+            </div>
+
+            <div class="image-card__body">
+              <p class="image-card__meta">
+                <span class="num">{{ img.width | faDigits }}</span>×<span class="num">{{ img.height | faDigits }}</span>
+                — ترتیب <span class="num">{{ img.sort_order | faDigits }}</span>
+              </p>
+
+              {# --- متن جایگزین --- #}
+              <form class="image-card__form" method="post"
+                    action="/admin/catalogue/products/{{ product.id }}/images/{{ img.image_id }}/alt">
+                <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+                <label class="sr-only" for="alt-{{ img.id }}">متن جایگزین</label>
+                <input class="field__input" id="alt-{{ img.id }}" name="altText" type="text"
+                       value="{{ img.alt_text or '' }}" placeholder="متن جایگزین (برای دسترس‌پذیری)" />
+                <button class="btn btn--quiet btn--sm" type="submit">ذخیره</button>
+              </form>
+
+              <div class="image-card__actions">
+                {% if not img.is_primary %}
+                  <form class="inline-form" method="post"
+                        action="/admin/catalogue/products/{{ product.id }}/images/{{ img.image_id }}/primary">
+                    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+                    <button class="btn btn--quiet btn--sm" type="submit">اصلی شود</button>
+                  </form>
+                {% endif %}
+
+                {# --- یک پله بالاتر ---
+                   فهرستِ *کاملِ* ترتیب تازه به‌صورت فیلد پنهان فرستاده
+                   می‌شود: همین قلم و قلمِ قبلی جای هم عوض می‌شوند و
+                   بقیه سر جایشان می‌مانند. سرور فقط همان فهرست را
+                   می‌نویسد، پس هیچ منطق ترتیبی در قالب نمی‌ماند. #}
+                {% if not isFirst %}
+                  <form class="inline-form" method="post"
+                        action="/admin/catalogue/products/{{ product.id }}/images/reorder">
+                    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+                    {% for other in images %}
+                      {% if loop.index0 == outerIndex - 1 %}
+                        <input type="hidden" name="order" value="{{ img.image_id }}" />
+                        <input type="hidden" name="order" value="{{ other.image_id }}" />
+                      {% elif loop.index0 != outerIndex %}
+                        <input type="hidden" name="order" value="{{ other.image_id }}" />
+                      {% endif %}
+                    {% endfor %}
+                    <button class="btn btn--quiet btn--sm" type="submit" title="یک پله بالاتر">↑</button>
+                  </form>
+                {% endif %}
+
+                <form class="inline-form" method="post"
+                      action="/admin/catalogue/products/{{ product.id }}/images/{{ img.image_id }}/delete">
+                  <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+                  <button class="btn btn--warn btn--sm" type="submit">حذف</button>
+                </form>
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="admin-panel__empty">
+        هنوز تصویری برای این محصول بارگذاری نشده است. تا وقتی تصویری نباشد،
+        کارت محصول در فروشگاه جای تصویر را با یک طرح خنثی پر می‌کند.
+      </p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
