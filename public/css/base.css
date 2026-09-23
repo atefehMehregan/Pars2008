@@ -1,50 +1,161 @@
 /* ============================================================================
- * base.css — پایه فنی چیدمان
+ * base.css — سامانهٔ طراحی پارس ۲۰۰۸
  * ----------------------------------------------------------------------------
- * فاز ۰: فقط یک پایه تمیز و واکنش‌گرا. طراحی بصری نهایی، رنگ‌ها، فونت‌ها و
- * هویت برند در فاز طراحی تعیین می‌شوند. اینجا عمدا خنثی است.
+ * فاز ۴. جایگزین پوستهٔ خنثای فاز ۰.
  *
- * از ویژگی‌های منطقی (inline-start/end) استفاده می‌شود، نه left/right،
- * تا چیدمان راست‌به‌چپ بدون استثنا کار کند.
+ * قاعده‌های این فایل:
+ *
+ *   * همه‌چیز از توکن‌های :root می‌آید. رنگ، فاصله و اندازهٔ سخت‌کد شده
+ *     فقط در خودِ تعریف توکن مجاز است.
+ *   * ویژگی‌های *منطقی* استفاده می‌شوند (inline-start/end، margin-inline)
+ *     نه left/right. چیدمان راست‌به‌چپ باید بدون استثنا کار کند.
+ *   * هیچ فونت بیرونی بار نمی‌شود. فونت سیستم تا وقتی هویت بصری نهایی
+ *     و یک فونت فارسیِ میزبانی‌شده انتخاب شود.
+ *   * هیچ تصویر بیرونی‌ای hotlink نمی‌شود. جای تصویر با SVG درون‌خط پر
+ *     می‌شود که داخل خودِ قالب است.
+ *   * لحن بصری: ابزار کار، نه ویترین مد. کنتراست بالا، لبه‌های آرام،
+ *     سایهٔ کم، بدون گرادیان تزئینی و بدون انیمیشن تزئینی.
+ *
+ * فهرست:
+ *   ۱. توکن‌ها          ۶. فوتر             ۱۱. صفحه‌بندی
+ *   ۲. پایه و ریست      ۷. صفحهٔ اصلی        ۱۲. حالت خالی و صفحهٔ پیام
+ *   ۳. کمکی‌ها          ۸. فهرست کاتالوگ     ۱۳. واکنش‌گرایی فروشگاه
+ *   ۴. دکمه‌ها          ۹. کارت محصول        ۱۴. بخش مدیر
+ *   ۵. هدر              ۱۰. صفحهٔ محصول      ۱۵. حرکت کاهش‌یافته
  * ==========================================================================*/
 
+/* ═══════════════════════════════════════════════════════ ۱. توکن‌ها ═══ */
+
 :root {
-  --ground: #ffffff;
-  --surface: #f6f6f5;
-  --ink: #1b1b1a;
-  --muted: #5f5c58;
-  --line: #e2e0dc;
-  --accent: #14505a;
+  /* --- سطح و متن --- */
+  --c-bg:          #f4f6f8;   /* زمینهٔ صفحه */
+  --c-surface:     #ffffff;   /* کارت، پنل، نوار */
+  --c-surface-2:   #eef1f4;   /* سطح فرورفته: جای تصویر، ردیف نوبتی */
+  --c-ink:         #14181d;   /* متن اصلی */
+  --c-ink-2:       #4a5560;   /* متن دوم */
+  --c-ink-3:       #6e7a86;   /* متن کم‌رنگ، برچسب */
+  --c-line:        #dde3e9;   /* خط جداکننده */
+  --c-line-strong: #c2ccd6;   /* خط پررنگ‌تر، کادر ورودی در حالت تمرکز */
+
+  /* --- برند و کنش --- */
+  /* آبی فولادی تیره: حرفه‌ای و خودرویی، نه آبیِ اداری و نه رنگ مد. */
+  --c-brand:        #123a5e;
+  --c-brand-strong: #0d2a45;   /* hover/active */
+  --c-brand-soft:   #e9eff5;   /* زمینهٔ ملایم برند */
+  --c-brand-ink:    #ffffff;   /* متن روی برند */
+
+  /* رنگ تأکید فقط برای حراج و فراخوان اصلی. کم استفاده شود. */
+  --c-accent:      #b4441f;
+  --c-accent-soft: #fbeee9;
+
+  /* --- وضعیت --- */
+  --c-ok:        #15653f;
+  --c-ok-soft:   #e8f4ed;
+  --c-ok-line:   #bcdcc4;
+  --c-warn:      #8a5a10;
+  --c-warn-soft: #fdf7e8;
+  --c-warn-line: #e8d7a8;
+  --c-err:       #9b2c17;
+  --c-err-soft:  #fdf0ee;
+  --c-err-line:  #e6c4bd;
+
+  /* --- فاصله --- */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+
+  /* --- اندازهٔ متن --- */
+  --t-xs: 0.75rem;
+  --t-sm: 0.875rem;
+  --t-md: 1rem;
+  --t-lg: 1.125rem;
+  --t-xl: 1.375rem;
+  --t-2xl: 1.75rem;
+  --t-3xl: clamp(1.75rem, 1.35rem + 1.9vw, 2.6rem);
+
+  /* --- شکل --- */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 14px;
+  --r-pill: 999px;
+
+  /* سایه فقط جایی که ارتفاع واقعی معنا دارد: نوار چسبان و فراخوان. */
+  --sh-sm: 0 1px 2px rgba(16, 24, 32, 0.06);
+  --sh-md: 0 8px 24px -12px rgba(16, 24, 32, 0.28);
 
   --container: 1200px;
-  --gap: 1rem;
-  --gap-lg: 2rem;
-  --radius: 6px;
 
-  /* فونت فارسی در فاز طراحی انتخاب می‌شود؛ فعلا فونت سیستم. */
-  --font: system-ui, 'Segoe UI', Tahoma, sans-serif;
+  /* فونت فارسی در فاز هویت بصری انتخاب می‌شود؛ فعلا پشتهٔ سیستم. */
+  --font: system-ui, 'Segoe UI', Tahoma, 'Iranian Sans', sans-serif;
+
+  /* ---------------------------------------------------------------------
+     نام‌های قدیمی. بخش مدیر (فاز ۲ و ۳) با این‌ها نوشته شده و بازنویسی
+     آن در این فاز خارج از دامنه است. این‌ها فقط نگاشت‌اند، نه مقدار تازه،
+     پس هر دو بخش دقیقا یک پالت دارند.
+     ------------------------------------------------------------------ */
+  --ground:  var(--c-surface);
+  --surface: var(--c-surface-2);
+  --ink:     var(--c-ink);
+  --muted:   var(--c-ink-2);
+  --line:    var(--c-line);
+  --accent:  var(--c-brand);
+  --gap:     var(--s-4);
+  --gap-lg:  var(--s-6);
+  --radius:  var(--r-md);
 }
+
+/* ═══════════════════════════════════════════════ ۲. پایه و ریست ═══ */
 
 *, *::before, *::after { box-sizing: border-box; }
 
+html { -webkit-text-size-adjust: 100%; }
+
 body {
   margin: 0;
-  background-color: var(--ground);
-  color: var(--ink);
+  background-color: var(--c-bg);
+  color: var(--c-ink);
   font-family: var(--font);
-  font-size: 1rem;
-  line-height: 1.8;
+  font-size: var(--t-md);
+  line-height: 1.8;          /* فارسی به فضای عمودی بیشتری نیاز دارد */
+  /* هیچ صفحه‌ای نباید افقی بلغزد. */
+  overflow-x: hidden;
 }
 
-/* ارقام و شماره فنی همیشه هم‌عرض، تا ستون‌های عددی تکان نخورند */
-.num, .part-number { font-variant-numeric: tabular-nums; }
-.part-number { font-family: ui-monospace, 'Consolas', monospace; letter-spacing: 0.02em; }
+h1, h2, h3, h4 { line-height: 1.5; text-wrap: balance; }
+
+img { max-width: 100%; }
+
+a { color: var(--c-brand); }
+a:hover { color: var(--c-brand-strong); }
+
+/* تمرکز همیشه دیده می‌شود — روی هر عنصری، در هر بخشی. */
+:focus-visible {
+  outline: 2px solid var(--c-brand);
+  outline-offset: 2px;
+  border-radius: var(--r-sm);
+}
+
+/* ═══════════════════════════════════════════════════ ۳. کمکی‌ها ═══ */
 
 .container {
   width: 100%;
   max-width: var(--container);
   margin-inline: auto;
-  padding-inline: var(--gap);
+  padding-inline: var(--s-4);
+}
+
+.section { padding-block: var(--s-6); }
+
+/* فقط برای صفحه‌خوان. */
+.sr-only {
+  position: absolute; width: 1px; height: 1px;
+  padding: 0; margin: -1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0;
 }
 
 .skip-link {
@@ -52,216 +163,846 @@ body {
   inset-inline-start: -9999px;
 }
 .skip-link:focus {
-  inset-inline-start: var(--gap);
-  top: var(--gap);
-  z-index: 10;
-  padding: 0.6rem 1rem;
-  background: var(--ink);
-  color: var(--ground);
-  border-radius: var(--radius);
+  inset-inline-start: var(--s-4);
+  top: var(--s-4);
+  z-index: 20;
+  padding: var(--s-2) var(--s-4);
+  background: var(--c-ink);
+  color: var(--c-surface);
+  border-radius: var(--r-sm);
 }
 
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+/* رقم و شمارهٔ فنی هم‌عرض، تا ستون‌های عددی تکان نخورند. */
+.num, .part-number { font-variant-numeric: tabular-nums; }
+.part-number {
+  font-family: ui-monospace, 'Consolas', monospace;
+  letter-spacing: 0.02em;
+}
 
-/* ------------------------------------------------------------------ هدر */
-.site-header { border-bottom: 1px solid var(--line); }
+.page-title { margin: 0 0 var(--s-2); font-size: var(--t-2xl); }
+.lede { margin: 0 0 var(--s-5); max-width: 62ch; color: var(--c-ink-2); }
+.note { margin-top: var(--s-4); font-size: var(--t-sm); color: var(--c-ink-3); }
+
+/* ═══════════════════════════════════════════════════ ۴. دکمه‌ها ═══ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  padding: 0.6rem 1.25rem;
+  border: 1px solid var(--c-brand);
+  border-radius: var(--r-md);
+  background: var(--c-brand);
+  color: var(--c-brand-ink);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+.btn:hover {
+  background: var(--c-brand-strong);
+  border-color: var(--c-brand-strong);
+  color: var(--c-brand-ink);
+}
+
+/* دکمهٔ دوم: هم‌وزن ولی نه هم‌صدا. */
+.btn--ghost {
+  background: transparent;
+  color: var(--c-brand);
+  border-color: var(--c-line-strong);
+}
+.btn--ghost:hover {
+  background: var(--c-brand-soft);
+  color: var(--c-brand-strong);
+  border-color: var(--c-brand);
+}
+
+/* روی زمینهٔ تیرهٔ فراخوان. */
+.btn--onDark {
+  background: var(--c-surface);
+  border-color: var(--c-surface);
+  color: var(--c-brand);
+}
+.btn--onDark:hover {
+  background: var(--c-brand-soft);
+  border-color: var(--c-brand-soft);
+  color: var(--c-brand-strong);
+}
+
+/* دکمهٔ دومِ روی زمینهٔ تیره: هم‌شکلِ ghost ولی با خطِ روشن.
+   ترکیب دو کلاس، نه یک کلاس تازه — تا ترتیب تعریف در فایل مهم نباشد. */
+.btn--onDark.btn--ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.45);
+  color: var(--c-brand-ink);
+}
+.btn--onDark.btn--ghost:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--c-brand-ink);
+  color: var(--c-brand-ink);
+}
+
+.btn--sm { padding: 0.4rem 0.9rem; font-size: var(--t-sm); }
+
+/* ═══════════════════════════════════════════════════════ ۵. هدر ═══ */
+
+.site-header {
+  background: var(--c-surface);
+  border-bottom: 1px solid var(--c-line);
+}
+
+/* نوار بالایی: یک جملهٔ کوتاه دربارهٔ خودِ فروشگاه. هیچ ادعای
+   خدماتی‌ای که پیاده نشده اینجا نوشته نمی‌شود. */
+.site-header__top {
+  background: var(--c-brand);
+  color: var(--c-brand-ink);
+  font-size: var(--t-xs);
+}
+.site-header__top p { margin: 0; padding-block: 0.45rem; }
+
 .site-header__bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: var(--gap);
-  min-height: 64px;
+  gap: var(--s-4);
+  min-height: 72px;
+  padding-block: var(--s-3);
   flex-wrap: wrap;
 }
-.brand { display: flex; align-items: baseline; gap: 0.5rem; text-decoration: none; color: inherit; }
-.brand__name { font-weight: 700; font-size: 1.15rem; }
-.brand__latin { font-size: 0.8rem; letter-spacing: 0.14em; color: var(--muted); }
 
-.site-nav__list { display: flex; gap: var(--gap); list-style: none; margin: 0; padding: 0; }
-.site-nav a { color: var(--muted); text-decoration: none; }
-.site-nav a:hover { color: var(--accent); }
-
-/* ---------------------------------------------------------------- محتوا */
-.section { padding-block: var(--gap-lg); }
-.eyebrow {
-  margin: 0 0 0.5rem;
-  font-size: 0.8rem;
-  letter-spacing: 0.1em;
-  color: var(--muted);
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  text-decoration: none;
+  color: inherit;
+  flex-shrink: 0;
 }
-.page-title { margin: 0 0 0.75rem; font-size: clamp(1.5rem, 1.2rem + 1.4vw, 2.25rem); text-wrap: balance; }
-.lede { margin: 0 0 var(--gap-lg); max-width: 62ch; color: var(--muted); }
-.note { margin-top: var(--gap-lg); font-size: 0.9rem; color: var(--muted); }
-code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
+/* نشانِ متنی. جای یک لوگوی واقعی را نگه می‌دارد بدون اینکه لوگویی
+   اختراع شود: وقتی فایل لوگو آمد، فقط همین عنصر عوض می‌شود. */
+.brand__mark {
+  display: grid;
+  place-items: center;
+  width: 42px; height: 42px;
+  border-radius: var(--r-md);
+  background: var(--c-brand);
+  color: var(--c-brand-ink);
+  font-weight: 700;
+  font-size: var(--t-sm);
+  letter-spacing: 0.02em;
+}
+.brand__text { display: flex; flex-direction: column; line-height: 1.3; }
+.brand__name { font-weight: 700; font-size: var(--t-lg); }
+.brand__latin {
+  font-size: var(--t-xs);
+  letter-spacing: 0.16em;
+  color: var(--c-ink-3);
+}
 
-.facts {
-  margin: 0;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+/* --- جست‌وجوی هدر --- */
+.site-search {
+  display: flex;
+  flex: 1 1 320px;
+  max-width: 520px;
+  min-width: 0;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-md);
+  background: var(--c-surface);
   overflow: hidden;
 }
-.facts__row {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--gap);
-  padding: 0.75rem var(--gap);
-  border-bottom: 1px solid var(--line);
+.site-search:focus-within {
+  border-color: var(--c-brand);
+  box-shadow: 0 0 0 3px var(--c-brand-soft);
 }
-.facts__row:last-child { border-bottom: 0; }
-.facts dt { color: var(--muted); margin: 0; }
-.facts dd { margin: 0; font-weight: 500; }
-
-.btn {
-  display: inline-block;
-  padding: 0.6rem 1.2rem;
-  background: var(--accent);
-  color: #fff;
-  border-radius: var(--radius);
-  text-decoration: none;
-}
-
-/* ----------------------------------------------------------------- فوتر */
-.site-footer {
-  margin-top: var(--gap-lg);
-  padding-block: var(--gap-lg);
-  border-top: 1px solid var(--line);
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-/* ------------------------------------------------------------ موبایل */
-@media (max-width: 640px) {
-  .facts__row { flex-direction: column; gap: 0.2rem; }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
-}
-
-/* ============================================================================
- * کاتالوگ — فاز ۱ب
- * ----------------------------------------------------------------------------
- * فقط حداقلِ لازم برای خوانا بودن فهرست و صفحهٔ محصول. طراحی بصری، رنگ‌ها،
- * فونت و هویت برند هنوز تعیین نشده‌اند و اینجا عمدا خنثی است.
- * ==========================================================================*/
-
-/* ---------------------------------------------------------- جست‌وجوی هدر */
-.site-search { display: flex; gap: 0.4rem; flex: 1 1 260px; max-width: 460px; }
 .site-search__input {
   flex-grow: 1;
   min-width: 0;
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--line);
-  border-radius: var(--radius);
+  padding: 0.6rem 0.85rem;
+  border: 0;
   font: inherit;
-  background: var(--ground);
-  color: var(--ink);
+  background: transparent;
+  color: var(--c-ink);
 }
+.site-search__input:focus-visible { outline: none; }
 .site-search__button {
-  padding: 0.5rem 0.9rem;
-  border: 1px solid var(--accent);
-  border-radius: var(--radius);
-  background: var(--accent);
-  color: #fff;
+  padding: 0.6rem 1.1rem;
+  border: 0;
+  border-inline-start: 1px solid var(--c-line);
+  background: var(--c-brand);
+  color: var(--c-brand-ink);
   font: inherit;
+  font-weight: 600;
   cursor: pointer;
 }
+.site-search__button:hover { background: var(--c-brand-strong); }
 
-/* ------------------------------------------------------------- چیدمان فهرست */
-.listing { display: grid; grid-template-columns: 220px minmax(0, 1fr); gap: var(--gap-lg); align-items: start; }
+/* --- ناوبری --- */
+.site-nav { margin-inline-start: auto; }
+.site-nav__list {
+  display: flex;
+  gap: var(--s-1);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.site-nav__link {
+  display: block;
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--r-md);
+  color: var(--c-ink-2);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: var(--t-sm);
+}
+.site-nav__link:hover { color: var(--c-brand); background: var(--c-brand-soft); }
+.site-nav__link.is-current { color: var(--c-brand); background: var(--c-brand-soft); }
+
+/* ═══════════════════════════════════════════════════════ ۶. فوتر ═══ */
+
+.site-footer {
+  margin-top: var(--s-8);
+  background: var(--c-ink);
+  color: #c9d2db;
+  font-size: var(--t-sm);
+}
+.site-footer a { color: #e4eaf0; text-decoration: none; }
+.site-footer a:hover { color: #ffffff; text-decoration: underline; }
+
+.site-footer__grid {
+  display: grid;
+  grid-template-columns: 1.6fr repeat(3, minmax(0, 1fr));
+  gap: var(--s-6);
+  padding-block: var(--s-7);
+}
+.site-footer__title {
+  margin: 0 0 var(--s-3);
+  font-size: var(--t-sm);
+  color: #ffffff;
+  letter-spacing: 0.04em;
+}
+.site-footer__text { margin: 0 0 var(--s-3); max-width: 46ch; line-height: 1.9; }
+.site-footer__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--s-2); }
+.site-footer__brand .brand__name { color: #ffffff; }
+.site-footer__brand .brand__latin { color: #93a1ad; }
+.site-footer__note { margin: 0; color: #93a1ad; font-size: var(--t-xs); }
+
+.site-footer__bottom {
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+  padding-block: var(--s-4);
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  color: #93a1ad;
+  font-size: var(--t-xs);
+}
+.site-footer__bottom p { margin: 0; }
+
+/* ═════════════════════════════════════════════════ ۷. صفحهٔ اصلی ═══ */
+
+.hero {
+  background: var(--c-brand);
+  color: var(--c-brand-ink);
+}
+.hero__inner {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  gap: var(--s-7);
+  align-items: center;
+  padding-block: var(--s-8);
+}
+.hero__eyebrow {
+  margin: 0 0 var(--s-3);
+  font-size: var(--t-xs);
+  letter-spacing: 0.14em;
+  color: #a9c0d6;
+}
+.hero__title { margin: 0 0 var(--s-4); font-size: var(--t-3xl); }
+.hero__lede {
+  margin: 0 0 var(--s-5);
+  max-width: 52ch;
+  color: #d3dfea;
+  font-size: var(--t-lg);
+}
+.hero__actions { display: flex; gap: var(--s-3); flex-wrap: wrap; }
+
+/* کارت جست‌وجوی سمتِ دیگرِ هیرو: مسیر اصلیِ پیدا کردن قطعه. */
+.hero__panel {
+  background: var(--c-surface);
+  color: var(--c-ink);
+  border-radius: var(--r-lg);
+  padding: var(--s-5);
+  box-shadow: var(--sh-md);
+}
+.hero__panel-title { margin: 0 0 var(--s-2); font-size: var(--t-lg); }
+.hero__panel-text { margin: 0 0 var(--s-4); color: var(--c-ink-2); font-size: var(--t-sm); }
+.hero__panel .site-search { max-width: none; }
+.hero__hints {
+  margin: var(--s-4) 0 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--s-2);
+  font-size: var(--t-sm);
+  color: var(--c-ink-2);
+}
+.hero__hints li { display: flex; gap: var(--s-2); align-items: baseline; }
+.hero__hints li::before {
+  content: '';
+  flex: 0 0 auto;
+  width: 6px; height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--c-brand);
+}
+
+/* --- سربرگ بخش‌های صفحهٔ اصلی --- */
+.home-section { padding-block: var(--s-6); }
+.home-section--tint { background: var(--c-surface); border-block: 1px solid var(--c-line); }
+.home-section__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-4);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-4);
+}
+.home-section__title { margin: 0; font-size: var(--t-xl); }
+.home-section__text { margin: var(--s-1) 0 0; color: var(--c-ink-2); font-size: var(--t-sm); }
+.home-section__link { font-size: var(--t-sm); font-weight: 600; text-decoration: none; }
+.home-section__link:hover { text-decoration: underline; }
+
+/* --- دسته‌ها --- */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: var(--s-3);
+}
+.category-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  text-decoration: none;
+  color: var(--c-ink);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.category-card:hover {
+  border-color: var(--c-brand);
+  background: var(--c-brand-soft);
+  color: var(--c-brand-strong);
+}
+.category-card__name { font-weight: 600; }
+.category-card__count {
+  flex: 0 0 auto;
+  padding: 0.1rem 0.5rem;
+  border-radius: var(--r-pill);
+  background: var(--c-surface-2);
+  color: var(--c-ink-3);
+  font-size: var(--t-xs);
+}
+.home-section--tint .category-card { background: var(--c-bg); }
+
+/* --- برندها --- */
+.brand-strip { display: flex; flex-wrap: wrap; gap: var(--s-2); }
+.brand-chip {
+  padding: 0.4rem 0.9rem;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-pill);
+  background: var(--c-surface);
+  color: var(--c-ink-2);
+  text-decoration: none;
+  font-size: var(--t-sm);
+}
+.brand-chip:hover { border-color: var(--c-brand); color: var(--c-brand); }
+
+/* --- بخش اعتماد --- */
+/* فقط توانایی‌های واقعی و قابل تأیید همین نسخه نوشته می‌شوند. هیچ
+   ادعایی دربارهٔ ارسال، گارانتی یا پشتیبانی که هنوز پیاده نشده. */
+.value-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: var(--s-4);
+}
+.value-card {
+  padding: var(--s-5);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+}
+.home-section--tint .value-card { background: var(--c-bg); }
+.value-card__title { margin: 0 0 var(--s-2); font-size: var(--t-md); }
+.value-card__text { margin: 0; color: var(--c-ink-2); font-size: var(--t-sm); }
+
+/* --- فراخوان پایانی --- */
+.cta-band {
+  margin-block: var(--s-6);
+  padding: var(--s-6);
+  border-radius: var(--r-lg);
+  background: var(--c-brand);
+  color: var(--c-brand-ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-5);
+  flex-wrap: wrap;
+}
+.cta-band__title { margin: 0 0 var(--s-2); font-size: var(--t-xl); }
+.cta-band__text { margin: 0; color: #d3dfea; max-width: 60ch; }
+
+/* ═══════════════════════════════════════════ ۸. فهرست کاتالوگ ═══ */
+
+.listing {
+  display: grid;
+  grid-template-columns: 240px minmax(0, 1fr);
+  gap: var(--s-6);
+  align-items: start;
+}
 .listing__main { min-width: 0; }
-.listing__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--gap); flex-wrap: wrap; }
-.listing__count { margin: 0; color: var(--muted); font-size: 0.9rem; }
 
-.listing-sidebar { display: flex; flex-direction: column; gap: var(--gap-lg); }
-.filter-group__title { margin: 0 0 0.5rem; font-size: 0.95rem; }
-.filter-group__empty { margin: 0; font-size: 0.85rem; color: var(--muted); }
-.filter-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.35rem; }
-.filter-list li { display: flex; justify-content: space-between; gap: 0.5rem; font-size: 0.9rem; }
-.filter-list a { color: var(--ink); text-decoration: none; }
-.filter-list a:hover { color: var(--accent); }
-.filter-list__count { color: var(--muted); }
+.listing__head { margin-bottom: var(--s-4); }
+.listing__head .page-title { margin-bottom: var(--s-1); }
+.listing__count { margin: 0; color: var(--c-ink-2); font-size: var(--t-sm); }
 
-/* ---------------------------------------------------------- شبکهٔ محصول */
-.product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--gap); margin-top: var(--gap); }
+/* --- نوار کناری --- */
+.listing-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  position: sticky;
+  top: var(--s-4);
+}
+.filter-group {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  padding: var(--s-4);
+}
+.filter-group__title {
+  margin: 0 0 var(--s-3);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--t-sm);
+  letter-spacing: 0.02em;
+}
+.filter-group__empty { margin: 0; font-size: var(--t-sm); color: var(--c-ink-3); }
+.filter-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.filter-list li { display: flex; }
+.filter-list a {
+  flex: 1 1 auto;
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--r-sm);
+  color: var(--c-ink);
+  text-decoration: none;
+  font-size: var(--t-sm);
+}
+.filter-list a:hover { background: var(--c-brand-soft); color: var(--c-brand-strong); }
+.filter-list a.is-current { background: var(--c-brand-soft); color: var(--c-brand-strong); font-weight: 600; }
+.filter-list__count { color: var(--c-ink-3); }
 
-.product-card { border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; background: var(--ground); }
-.product-card__link { display: flex; flex-direction: column; height: 100%; color: inherit; text-decoration: none; }
-.product-card__media { position: relative; aspect-ratio: 1 / 1; background: var(--surface); }
+/* --- نوار مرتب‌سازی و پالایش --- */
+/* فرم GET ساده: هیچ جاوااسکریپتی لازم نیست، و نشانی حاصل همان
+   پارامترهای فهرست‌سفیدِ موجود است. */
+.listing-toolbar {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  margin-bottom: var(--s-4);
+}
+.listing-toolbar__field { display: flex; flex-direction: column; gap: var(--s-1); min-width: 160px; }
+.listing-toolbar__label { font-size: var(--t-xs); color: var(--c-ink-3); }
+.listing-toolbar__select {
+  padding: 0.45rem 0.6rem;
+  border: 1px solid var(--c-line-strong);
+  border-radius: var(--r-sm);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font: inherit;
+  font-size: var(--t-sm);
+}
+.listing-toolbar__actions { display: flex; gap: var(--s-2); margin-inline-start: auto; }
+
+.active-filters {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--s-4);
+  font-size: var(--t-sm);
+  color: var(--c-ink-3);
+}
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0.2rem 0.7rem;
+  border-radius: var(--r-pill);
+  background: var(--c-brand-soft);
+  color: var(--c-brand-strong);
+  text-decoration: none;
+}
+.filter-chip:hover { background: var(--c-brand); color: var(--c-brand-ink); }
+
+/* --- مسیر صفحه --- */
+.breadcrumb {
+  margin-bottom: var(--s-4);
+  font-size: var(--t-sm);
+  color: var(--c-ink-3);
+}
+.breadcrumb ol { list-style: none; display: flex; flex-wrap: wrap; gap: var(--s-2); margin: 0; padding: 0; }
+.breadcrumb li { display: flex; gap: var(--s-2); align-items: baseline; }
+.breadcrumb li + li::before { content: '/'; color: var(--c-line-strong); }
+.breadcrumb a { color: var(--c-ink-2); text-decoration: none; }
+.breadcrumb a:hover { color: var(--c-brand); text-decoration: underline; }
+.breadcrumb [aria-current='page'] { color: var(--c-ink); }
+
+/* ═══════════════════════════════════════════════ ۹. کارت محصول ═══ */
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--s-4);
+}
+
+.product-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.product-card:hover { border-color: var(--c-line-strong); box-shadow: var(--sh-sm); }
+.product-card:focus-within { border-color: var(--c-brand); }
+
+.product-card__link {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  color: inherit;
+  text-decoration: none;
+}
+.product-card__media {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: var(--c-surface-2);
+}
 .product-card__media img { width: 100%; height: 100%; object-fit: contain; display: block; }
-.product-card__placeholder { width: 100%; height: 100%; background: var(--surface); }
-.product-card__body { display: flex; flex-direction: column; gap: 0.3rem; padding: 0.75rem; flex-grow: 1; }
-.product-card__brand { margin: 0; font-size: 0.75rem; color: var(--muted); }
-.product-card__name { margin: 0; font-size: 0.95rem; font-weight: 500; line-height: 1.6; }
-.product-card__oem { margin: 0; font-size: 0.75rem; color: var(--muted); }
-.product-card__foot { margin-top: auto; padding-top: 0.5rem; display: flex; align-items: baseline; justify-content: space-between; gap: 0.5rem; flex-wrap: wrap; }
 
-.price__now { font-size: 0.95rem; }
-.price__old { font-size: 0.8rem; color: var(--muted); }
+.product-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-3);
+  flex-grow: 1;
+}
+.product-card__brand { margin: 0; font-size: var(--t-xs); color: var(--c-ink-3); }
+.product-card__name {
+  margin: 0;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  line-height: 1.7;
+  /* نام قطعه می‌تواند بلند باشد؛ دو خط، بعد کوتاه می‌شود. */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.product-card__oem { margin: 0; font-size: var(--t-xs); color: var(--c-ink-3); }
+.product-card__foot {
+  margin-top: auto;
+  padding-top: var(--s-3);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
 
-.badge { position: absolute; inset-block-start: 0.5rem; inset-inline-start: 0.5rem; padding: 0.15rem 0.45rem; border-radius: 3px; font-size: 0.7rem; color: #fff; }
-.badge--sale { background: #8a3324; }
-.badge--new { background: var(--accent); }
+/* جای تصویر — SVG درون‌خط است، نه فایل بیرونی. */
+.media-placeholder {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background: var(--c-surface-2);
+  color: var(--c-line-strong);
+}
+.media-placeholder svg { width: 38%; height: auto; max-width: 96px; }
 
-.stock { font-size: 0.75rem; }
-.stock--in { color: #1c6b47; }
-.stock--order { color: #8a6d1f; }
-.stock--out { color: var(--muted); }
+.price { display: flex; align-items: baseline; gap: var(--s-2); flex-wrap: wrap; }
+.price__now { font-size: var(--t-md); font-weight: 700; color: var(--c-ink); }
+.price__old { font-size: var(--t-xs); color: var(--c-ink-3); }
 
-/* --------------------------------------------------------- صفحهٔ محصول */
-.breadcrumb { font-size: 0.85rem; color: var(--muted); margin-bottom: var(--gap); }
-.breadcrumb a { color: var(--muted); }
+.badge {
+  position: absolute;
+  inset-block-start: var(--s-2);
+  inset-inline-start: var(--s-2);
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--r-sm);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: #fff;
+}
+.badge--sale { background: var(--c-accent); }
+.badge--new { background: var(--c-brand); }
 
-.product-detail { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--gap-lg); align-items: start; }
-.product-detail__media img { width: 100%; height: auto; display: block; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); }
-.product-detail__placeholder { aspect-ratio: 1 / 1; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
-.thumb-list { list-style: none; display: flex; gap: 0.5rem; margin: 0.5rem 0 0; padding: 0; flex-wrap: wrap; }
-.thumb-list img { width: 72px; height: 72px; object-fit: contain; border: 1px solid var(--line); border-radius: 3px; background: var(--surface); }
-.product-detail__brand { margin: 0 0 0.35rem; font-size: 0.85rem; color: var(--muted); }
-.product-detail__price { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; margin-block: var(--gap); }
-.product-detail__price .badge { position: static; }
+.stock { font-size: var(--t-xs); font-weight: 600; }
+.stock--in { color: var(--c-ok); }
+.stock--order { color: var(--c-warn); }
+.stock--out { color: var(--c-ink-3); }
 
-.spec-table { margin: 0; border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; }
-.spec-table__row { display: flex; justify-content: space-between; gap: var(--gap); padding: 0.55rem 0.85rem; border-bottom: 1px solid var(--line); }
+/* ═══════════════════════════════════════════════ ۱۰. صفحهٔ محصول ═══ */
+
+.product-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--s-6);
+  align-items: start;
+}
+
+.product-detail__media {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  padding: var(--s-4);
+}
+.product-detail__image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: var(--r-sm);
+  background: var(--c-surface-2);
+}
+.product-detail__placeholder {
+  aspect-ratio: 1 / 1;
+  border-radius: var(--r-sm);
+}
+.thumb-list {
+  list-style: none;
+  display: flex;
+  gap: var(--s-2);
+  margin: var(--s-3) 0 0;
+  padding: 0;
+  flex-wrap: wrap;
+}
+.thumb-list img {
+  width: 72px; height: 72px;
+  object-fit: contain;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  background: var(--c-surface-2);
+}
+
+.product-detail__brand { margin: 0 0 var(--s-2); font-size: var(--t-sm); }
+.product-detail__brand a { text-decoration: none; font-weight: 600; }
+.product-detail__brand a:hover { text-decoration: underline; }
+.product-detail__title { margin: 0 0 var(--s-3); font-size: var(--t-2xl); }
+.product-detail__lede { margin: 0 0 var(--s-4); color: var(--c-ink-2); }
+
+/* کارت خرید: قیمت، وضعیت و شناسه‌ها با هم. جایی که بعدا دکمهٔ
+   «افزودن به سبد» می‌نشیند — امروز عمدا خالی است. */
+.buy-card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  padding: var(--s-5);
+  margin-bottom: var(--s-5);
+}
+.buy-card__price { display: flex; align-items: baseline; gap: var(--s-3); flex-wrap: wrap; }
+.buy-card__price .price__now { font-size: var(--t-2xl); }
+.buy-card__price .badge { position: static; }
+.buy-card__row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+  padding-top: var(--s-3);
+  border-top: 1px solid var(--c-line);
+  font-size: var(--t-sm);
+  color: var(--c-ink-2);
+}
+
+.availability {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0.2rem 0.7rem;
+  border-radius: var(--r-pill);
+  border: 1px solid;
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+.availability--in { background: var(--c-ok-soft); border-color: var(--c-ok-line); color: var(--c-ok); }
+.availability--order { background: var(--c-warn-soft); border-color: var(--c-warn-line); color: var(--c-warn); }
+.availability--out { background: var(--c-surface-2); border-color: var(--c-line); color: var(--c-ink-3); }
+
+.info-note {
+  margin: 0;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: var(--c-brand-soft);
+  color: var(--c-ink-2);
+  font-size: var(--t-sm);
+}
+
+.spec-table {
+  margin: 0;
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  overflow: hidden;
+}
+.spec-table__row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--s-4);
+  padding: 0.6rem var(--s-4);
+  border-bottom: 1px solid var(--c-line);
+}
+.spec-table__row:nth-child(odd) { background: var(--c-bg); }
 .spec-table__row:last-child { border-bottom: 0; }
-.spec-table dt { margin: 0; color: var(--muted); font-size: 0.85rem; }
-.spec-table dd { margin: 0; font-size: 0.9rem; }
+.spec-table dt { margin: 0; color: var(--c-ink-3); font-size: var(--t-sm); }
+.spec-table dd { margin: 0; font-size: var(--t-sm); font-weight: 500; text-align: end; }
 
-.compat { margin-top: var(--gap-lg); }
-.compat__title { font-size: 1rem; margin: 0 0 0.4rem; }
-.compat__list { margin: 0.4rem 0 0; padding-inline-start: 1.2rem; font-size: 0.9rem; }
-.product-description { margin-top: var(--gap-lg); max-width: 70ch; }
+.product-block { margin-top: var(--s-6); }
+.product-block__title {
+  margin: 0 0 var(--s-3);
+  padding-bottom: var(--s-2);
+  border-bottom: 1px solid var(--c-line);
+  font-size: var(--t-lg);
+}
+.product-block__body { max-width: 70ch; color: var(--c-ink-2); white-space: pre-line; }
 
-/* ------------------------------------------------------------ صفحه‌بندی */
-.pagination { margin-top: var(--gap-lg); }
-.pagination__list { list-style: none; display: flex; gap: 0.35rem; margin: 0; padding: 0; flex-wrap: wrap; }
-.pagination__link { display: inline-block; padding: 0.35rem 0.7rem; border: 1px solid var(--line); border-radius: var(--radius); text-decoration: none; color: var(--ink); }
-.pagination__link:hover { border-color: var(--accent); color: var(--accent); }
-.pagination__link.is-current { background: var(--accent); border-color: var(--accent); color: #fff; }
-.pagination__summary { margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--muted); }
+.compat__list { margin: var(--s-2) 0 0; padding: 0; list-style: none; display: grid; gap: var(--s-2); }
+.compat__list li {
+  padding: var(--s-2) var(--s-3);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  font-size: var(--t-sm);
+}
 
-/* ------------------------------------------------------------ حالت خالی */
-.empty-state { margin-top: var(--gap-lg); padding: var(--gap-lg); border: 1px dashed var(--line); border-radius: var(--radius); text-align: center; }
-.empty-state__title { margin: 0 0 0.4rem; font-size: 1.05rem; }
-.empty-state__text { margin: 0 0 var(--gap); color: var(--muted); }
+/* ═══════════════════════════════════════════════ ۱۱. صفحه‌بندی ═══ */
 
-/* ---------------------------------------------------------------- موبایل */
-@media (max-width: 1000px) { .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-@media (max-width: 820px) {
+.pagination { margin-top: var(--s-6); }
+.pagination__list { list-style: none; display: flex; gap: var(--s-1); margin: 0; padding: 0; flex-wrap: wrap; }
+.pagination__link {
+  display: inline-block;
+  min-width: 2.5rem;
+  padding: 0.4rem 0.8rem;
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-sm);
+  background: var(--c-surface);
+  text-align: center;
+  text-decoration: none;
+  color: var(--c-ink);
+  font-size: var(--t-sm);
+}
+.pagination__link:hover { border-color: var(--c-brand); color: var(--c-brand); }
+.pagination__link.is-current {
+  background: var(--c-brand);
+  border-color: var(--c-brand);
+  color: var(--c-brand-ink);
+  font-weight: 600;
+}
+.pagination__summary { margin: var(--s-3) 0 0; font-size: var(--t-sm); color: var(--c-ink-3); }
+
+/* ═══════════════════════════════ ۱۲. حالت خالی و صفحهٔ پیام ═══ */
+
+/* حالت خالی باید *بگوید چه اتفاقی افتاده* و یک راه بیرون بدهد؛
+   «چیزی نیست» به‌تنهایی به کاربر کمکی نمی‌کند. */
+.empty-state {
+  padding: var(--s-7) var(--s-5);
+  background: var(--c-surface);
+  border: 1px solid var(--c-line);
+  border-radius: var(--r-md);
+  text-align: center;
+}
+.empty-state__icon {
+  display: grid;
+  place-items: center;
+  width: 64px; height: 64px;
+  margin: 0 auto var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--c-brand-soft);
+  color: var(--c-brand);
+}
+.empty-state__icon svg { width: 30px; height: 30px; }
+.empty-state__title { margin: 0 0 var(--s-2); font-size: var(--t-lg); }
+.empty-state__text { margin: 0 auto var(--s-4); max-width: 48ch; color: var(--c-ink-2); font-size: var(--t-sm); }
+
+.message-page {
+  max-width: 560px;
+  margin-inline: auto;
+  padding-block: var(--s-8);
+  text-align: center;
+}
+.message-page__code {
+  display: block;
+  font-size: var(--t-3xl);
+  font-weight: 700;
+  color: var(--c-line-strong);
+  font-variant-numeric: tabular-nums;
+}
+.message-page__title { margin: 0 0 var(--s-3); font-size: var(--t-xl); }
+.message-page__text { margin: 0 auto var(--s-5); max-width: 46ch; color: var(--c-ink-2); }
+.message-page__actions { display: flex; gap: var(--s-3); justify-content: center; flex-wrap: wrap; }
+.message-page__ref { margin-top: var(--s-5); font-size: var(--t-sm); color: var(--c-ink-3); }
+
+/* ═══════════════════════════════════ ۱۳. واکنش‌گرایی فروشگاه ═══ */
+
+@media (max-width: 1000px) {
+  .product-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .site-footer__grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 900px) {
+  .hero__inner { grid-template-columns: 1fr; gap: var(--s-6); padding-block: var(--s-6); }
   .listing { grid-template-columns: 1fr; }
+  .listing-sidebar { position: static; }
   .product-detail { grid-template-columns: 1fr; }
 }
+
 @media (max-width: 640px) {
-  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
+  .category-grid { grid-template-columns: 1fr 1fr; }
+  .site-footer__grid { grid-template-columns: 1fr; gap: var(--s-5); padding-block: var(--s-6); }
+
+  /* هدر موبایل: برند و ناوبری در یک ردیف، جست‌وجو تمام‌عرض زیر آن.
+     همه با ترتیب flex — هیچ جاوااسکریپتی و هیچ منوی کشویی‌ای لازم نیست. */
+  .site-header__bar { gap: var(--s-3); min-height: 0; }
+  .site-nav { margin-inline-start: auto; }
   .site-search { order: 3; flex-basis: 100%; max-width: none; }
+
+  .listing-toolbar { flex-direction: column; align-items: stretch; }
+  .listing-toolbar__field { min-width: 0; }
+  .listing-toolbar__actions { margin-inline-start: 0; }
+  .listing-toolbar__actions .btn { flex: 1 1 auto; }
+
+  .cta-band { padding: var(--s-5); }
+  .spec-table__row { flex-direction: column; gap: var(--s-1); }
+  .spec-table dd { text-align: start; }
+  .empty-state { padding: var(--s-5) var(--s-4); }
 }
 
-/* ============================================================================
- * بخش مدیر — فاز ۲
- * ----------------------------------------------------------------------------
- * پوستهٔ کمینه و کاربردی. بخش مدیر ابزار کار است، نه ویترین: خوانایی و
- * تراکم اطلاعات مهم‌تر از جلوهٔ بصری است. هویت برند هنوز تعیین نشده.
- * ==========================================================================*/
+/* ═══════════════════════════════════════════════ ۱۴. بخش مدیر ═══ */
+/* ----------------------------------------------------------------------------
+ * پوستهٔ فاز ۲ و ۳، بدون تغییر ساختاری. فقط روی توکن‌های تازه سوار شده
+ * است تا یک پالت در کل پروژه باشد. بخش مدیر ابزار کار است، نه ویترین:
+ * تراکم اطلاعات و خوانایی مهم‌تر از جلوهٔ بصری است.
+ * ------------------------------------------------------------------------- */
 
 .admin-body { background: var(--surface); }
 
@@ -274,9 +1015,15 @@ code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
   gap: var(--gap); flex-wrap: wrap; min-height: 56px;
 }
 
-.admin-nav { display: flex; align-items: center; gap: var(--gap); }
+.admin-nav { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; }
 .admin-nav__who { font-size: 0.9rem; color: var(--muted); }
 .admin-nav__logout { margin: 0; }
+.admin-nav__links { display: flex; gap: 0.2rem; flex-wrap: wrap; }
+.admin-nav__link {
+  padding: 0.35rem 0.7rem; color: var(--muted);
+  text-decoration: none; border-radius: var(--radius);
+}
+.admin-nav__link:hover { color: var(--accent); background: var(--surface); }
 
 .admin-main { max-width: var(--container); margin-inline: auto; padding: var(--gap-lg) var(--gap); }
 .admin-title { margin: 0 0 0.4rem; font-size: 1.5rem; }
@@ -300,8 +1047,8 @@ code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
 .admin-login__title { margin: 0 0 var(--gap); font-size: 1.2rem; }
 .admin-login__error {
   margin: 0 0 var(--gap); padding: 0.6rem 0.8rem;
-  background: #fdf0ee; border: 1px solid #e6c4bd; border-radius: var(--radius);
-  color: #7d2b1c; font-size: 0.875rem;
+  background: var(--c-err-soft); border: 1px solid var(--c-err-line); border-radius: var(--radius);
+  color: var(--c-err); font-size: 0.875rem;
 }
 .admin-login__form { display: flex; flex-direction: column; gap: var(--gap); }
 
@@ -316,30 +1063,12 @@ code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
 
 .btn--block { display: block; width: 100%; text-align: center; border: 0; cursor: pointer; font: inherit; }
 .btn--quiet {
+  display: inline-block;
   background: transparent; color: var(--muted);
   border: 1px solid var(--line); border-radius: var(--radius);
-  padding: 0.4rem 0.8rem; font: inherit; cursor: pointer;
+  padding: 0.4rem 0.8rem; font: inherit; cursor: pointer; text-decoration: none;
 }
-.btn--quiet:hover { color: var(--ink); border-color: var(--muted); }
-
-@media (max-width: 640px) {
-  .admin-login { margin-top: var(--gap-lg); }
-}
-
-/* ============================================================================
- * مدیریت کاتالوگ — فاز ۳
- * ----------------------------------------------------------------------------
- * فقط چیزی که صفحه‌های تازه برای کار کردن لازم دارند. همان زبان بصری
- * فاز ۲ ادامه پیدا می‌کند: متغیرهای رنگ مشترک، جدول کم‌حاشیه، فاصله‌های
- * یکسان. هیچ قاعده‌ای اینجا روی صفحه‌های عمومی اثر نمی‌گذارد.
- * ==========================================================================*/
-
-/* فقط برای صفحه‌خوان — برچسب ستونی که عنوان دیداری ندارد. */
-.sr-only {
-  position: absolute; width: 1px; height: 1px;
-  padding: 0; margin: -1px; overflow: hidden;
-  clip-path: inset(50%); white-space: nowrap; border: 0;
-}
+.btn--quiet:hover { color: var(--ink); border-color: var(--muted); background: transparent; }
 
 .admin-headline {
   display: flex; align-items: center; justify-content: space-between;
@@ -365,9 +1094,9 @@ code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
   margin: 0 0 var(--gap); padding: 0.65rem 0.9rem;
   border: 1px solid; border-radius: var(--radius); font-size: 0.9rem;
 }
-.admin-flash--success { background: #eef7f0; border-color: #bcdcc4; color: #1c5c31; }
-.admin-flash--error   { background: #fdf0ee; border-color: #e6c4bd; color: #7d2b1c; }
-.admin-flash--warn    { background: #fdf7e8; border-color: #e8d7a8; color: #6b5310; }
+.admin-flash--success { background: var(--c-ok-soft); border-color: var(--c-ok-line); color: var(--c-ok); }
+.admin-flash--error   { background: var(--c-err-soft); border-color: var(--c-err-line); color: var(--c-err); }
+.admin-flash--warn    { background: var(--c-warn-soft); border-color: var(--c-warn-line); color: var(--c-warn); }
 
 /* --------------------------------------------------------- فیلترها */
 .admin-filters {
@@ -385,36 +1114,36 @@ code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
 .admin-table__actions { white-space: nowrap; }
 .admin-table__actions > * { vertical-align: middle; }
 .admin-table tr.is-inactive td { background: var(--surface); color: var(--muted); }
-.admin-table .price-sale { color: #1c5c31; font-weight: 600; }
+.admin-table .price-sale { color: var(--c-ok); font-weight: 600; }
 .admin-table .price-old { color: var(--muted); font-size: 0.8rem; margin-inline-start: 0.3rem; }
 
 .pill {
-  display: inline-block; padding: 0.1rem 0.5rem; border-radius: 999px;
+  display: inline-block; padding: 0.1rem 0.5rem; border-radius: var(--r-pill);
   font-size: 0.75rem; border: 1px solid;
 }
-.pill--on  { background: #eef7f0; border-color: #bcdcc4; color: #1c5c31; }
+.pill--on  { background: var(--c-ok-soft); border-color: var(--c-ok-line); color: var(--c-ok); }
 .pill--off { background: var(--surface); border-color: var(--line); color: var(--muted); }
 
 .inline-form { display: inline-block; margin: 0 0.2rem; }
 
 /* ----------------------------------------------------------- دکمه */
 .btn--primary {
-  display: inline-block; background: var(--accent); color: #fff;
+  display: inline-block; background: var(--accent); color: var(--c-brand-ink);
   border: 1px solid var(--accent); border-radius: var(--radius);
   padding: 0.4rem 0.9rem; font: inherit; cursor: pointer; text-decoration: none;
 }
-.btn--primary:hover { filter: brightness(1.1); }
+.btn--primary:hover { background: var(--c-brand-strong); border-color: var(--c-brand-strong); }
 .btn--warn {
-  background: #fdf7e8; color: #6b5310; border: 1px solid #e8d7a8;
+  background: var(--c-warn-soft); color: var(--c-warn); border: 1px solid var(--c-warn-line);
   border-radius: var(--radius); padding: 0.4rem 0.9rem; font: inherit; cursor: pointer;
 }
 .btn--warn:hover { background: #fbf0d4; }
 .btn--danger {
-  background: #8d2f1e; color: #fff; border: 1px solid #8d2f1e;
+  background: var(--c-err); color: #fff; border: 1px solid var(--c-err);
   border-radius: var(--radius); padding: 0.45rem 1rem; font: inherit; cursor: pointer;
 }
 .btn--danger:hover { filter: brightness(1.1); }
-.link-danger { color: #8d2f1e; font-size: 0.85rem; text-decoration: none; }
+.link-danger { color: var(--c-err); font-size: 0.85rem; text-decoration: none; }
 .link-danger:hover { text-decoration: underline; }
 
 /* ------------------------------------------------------------ فرم */
@@ -429,9 +1158,9 @@ code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
 .admin-panel .field + .field,
 .admin-panel .form-grid + .field { margin-top: var(--gap); }
 
-.field__req { color: #8d2f1e; }
+.field__req { color: var(--c-err); }
 .field__hint { margin: 0; font-size: 0.78rem; color: var(--muted); }
-.field__error { margin: 0; font-size: 0.8rem; color: #8d2f1e; }
+.field__error { margin: 0; font-size: 0.8rem; color: var(--c-err); }
 .field--invalid .field__input { border-color: #c98a7c; }
 .field__input--area { resize: vertical; line-height: 1.7; }
 
@@ -449,23 +1178,25 @@ code { background: var(--surface); padding: 0.1em 0.35em; border-radius: 3px; }
    کار روزمره باید آسان باشد و کار برگشت‌ناپذیر نباید. */
 .admin-danger {
   margin-top: var(--gap-lg); padding: var(--gap);
-  background: #fdf6f4; border: 1px solid #e6c4bd; border-radius: var(--radius);
+  background: var(--c-err-soft); border: 1px solid var(--c-err-line); border-radius: var(--radius);
 }
-.admin-danger__title { margin: 0 0 0.3rem; font-size: 0.95rem; color: #7d2b1c; }
+.admin-danger__title { margin: 0 0 0.3rem; font-size: 0.95rem; color: var(--c-err); }
 .admin-danger__text { margin: 0 0 var(--gap); font-size: 0.85rem; color: var(--muted); max-width: 62ch; }
 .admin-danger__form { display: flex; align-items: center; gap: var(--gap); flex-wrap: wrap; }
 
 @media (max-width: 640px) {
+  .admin-login { margin-top: var(--gap-lg); }
   .admin-headline { align-items: flex-start; flex-direction: column; }
   .spec-row { grid-template-columns: 1fr; }
   .admin-table__actions { white-space: normal; }
 }
 
-/* پیوندهای کاتالوگ در نوار بالای بخش مدیر. همان رنگ‌ها و فاصله‌های
-   موجود؛ فقط یک پیوند ساده که زیرخط ندارد. */
-.admin-nav__links { display: flex; gap: 0.2rem; flex-wrap: wrap; }
-.admin-nav__link {
-  padding: 0.35rem 0.7rem; color: var(--muted);
-  text-decoration: none; border-radius: var(--radius);
+/* ═════════════════════════════════════════ ۱۵. حرکت کاهش‌یافته ═══ */
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
-.admin-nav__link:hover { color: var(--accent); background: var(--surface); }

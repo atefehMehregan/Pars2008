@@ -1,15 +1,23 @@
 {% extends "layouts/base.njk" %}
 
+{# ============================================================================
+   صفحهٔ جزئیات محصول.
+
+   دکمهٔ «افزودن به سبد» عمدا اینجا نیست: سبد خرید هنوز وجود ندارد و
+   نشان دادن دکمه‌ای که کار نمی‌کند، بدتر از نبودنش است. به‌جایش همان
+   جا یک جملهٔ صریح می‌گوید چرا.
+   ========================================================================= #}
+
 {% block content %}
 <section class="section">
   <div class="container">
-    <nav class="breadcrumb" aria-label="مسیر صفحه">
-      <a href="/">خانه</a> <span aria-hidden="true">/</span>
-      <a href="/products">محصولات</a> <span aria-hidden="true">/</span>
-      <a href="/category/{{ product.category_slug | urlencode }}">{{ product.category_name }}</a>
-      <span aria-hidden="true">/</span>
-      <span>{{ product.name }}</span>
-    </nav>
+    {% set crumbs = [
+      { label: 'خانه', url: '/' },
+      { label: 'محصولات', url: '/products' },
+      { label: product.category_name, url: '/category/' + (product.category_slug | urlencode) },
+      { label: product.name }
+    ] %}
+    {% include "partials/breadcrumb.njk" %}
 
     <div class="product-detail">
       {# ---------------------------------------------------------- گالری #}
@@ -39,7 +47,9 @@
             </ul>
           {% endif %}
         {% else %}
-          <div class="product-detail__placeholder" aria-hidden="true"></div>
+          <div class="product-detail__placeholder">
+            {% include "partials/media-placeholder.njk" %}
+          </div>
           <p class="note">تصویر این محصول هنوز بارگذاری نشده است.</p>
         {% endif %}
       </div>
@@ -52,22 +62,45 @@
           </p>
         {% endif %}
 
-        <h1 class="page-title">{{ product.name }}</h1>
+        <h1 class="product-detail__title">{{ product.name }}</h1>
 
         {% if product.short_description %}
-          <p class="lede">{{ product.short_description }}</p>
+          <p class="product-detail__lede">{{ product.short_description }}</p>
         {% endif %}
 
-        <div class="product-detail__price">
-          {% if product.sale_price_toman %}
-            <strong class="price__now num">{{ product.sale_price_toman | toman }}</strong>
-            <del class="price__old num">{{ product.price_toman | tomanPlain }}</del>
-            {% if discountPercent > 0 %}
-              <span class="badge badge--sale num">{{ discountPercent | faDigits }}٪ تخفیف</span>
+        <div class="buy-card">
+          <div class="buy-card__price">
+            {% if product.sale_price_toman %}
+              <strong class="price__now num">{{ product.sale_price_toman | toman }}</strong>
+              <del class="price__old num">{{ product.price_toman | tomanPlain }}</del>
+              {% if discountPercent > 0 %}
+                <span class="badge badge--sale num">{{ discountPercent | faDigits }}٪ تخفیف</span>
+              {% endif %}
+            {% else %}
+              <strong class="price__now num">{{ product.price_toman | toman }}</strong>
             {% endif %}
-          {% else %}
-            <strong class="price__now num">{{ product.price_toman | toman }}</strong>
-          {% endif %}
+          </div>
+
+          <div class="buy-card__row">
+            {% if product.availability == 'in_stock' %}
+              <span class="availability availability--in">موجود</span>
+            {% elif product.availability == 'on_order' %}
+              <span class="availability availability--order">قابل سفارش</span>
+            {% elif product.availability == 'discontinued' %}
+              <span class="availability availability--out">تولید متوقف شده</span>
+            {% else %}
+              <span class="availability availability--out">ناموجود</span>
+            {% endif %}
+            <span>کد کالا: <bdi class="part-number">{{ product.sku }}</bdi></span>
+          </div>
+
+          <div class="buy-card__row">
+            {# سبد خرید و ثبت سفارش هنوز ساخته نشده‌اند. #}
+            <p class="info-note">
+              ثبت سفارش آنلاین هنوز فعال نشده است. برای پیگیری این قطعه،
+              کد کالا یا شماره فنی بالا را یادداشت کنید.
+            </p>
+          </div>
         </div>
 
         <dl class="spec-table">
@@ -81,6 +114,10 @@
               <dd><bdi class="part-number">{{ product.oem_number }}</bdi></dd>
             </div>
           {% endif %}
+          <div class="spec-table__row">
+            <dt>دسته‌بندی</dt>
+            <dd><a href="/category/{{ product.category_slug | urlencode }}">{{ product.category_name }}</a></dd>
+          </div>
           <div class="spec-table__row">
             <dt>وضعیت</dt>
             <dd>
@@ -99,10 +136,10 @@
         </dl>
 
         {% if product.compatibility_note or vehicles.length %}
-          <section class="compat">
-            <h2 class="compat__title">سازگاری</h2>
+          <section class="product-block">
+            <h2 class="product-block__title">سازگاری</h2>
             {% if product.compatibility_note %}
-              <p>{{ product.compatibility_note }}</p>
+              <div class="product-block__body">{{ product.compatibility_note }}</div>
             {% endif %}
             {% if vehicles.length %}
               <ul class="compat__list">
@@ -113,16 +150,13 @@
             {% endif %}
           </section>
         {% endif %}
-
-        {# سبد خرید در فاز بعد اضافه می‌شود. اینجا عمدا دکمه‌ای نیست تا
-           چیزی که کار نمی‌کند به کاربر نشان داده نشود. #}
       </div>
     </div>
 
     {% if product.description %}
-      <section class="product-description">
-        <h2>توضیحات</h2>
-        <p>{{ product.description }}</p>
+      <section class="product-block">
+        <h2 class="product-block__title">توضیحات</h2>
+        <div class="product-block__body">{{ product.description }}</div>
       </section>
     {% endif %}
   </div>

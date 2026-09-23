@@ -14,7 +14,7 @@ import { config, ROOT } from './config/index.js';
 import { extraSecurityHeaders, csrfToken, notFound, errorHandler } from './middleware/security.js';
 import { generalLimiter, loginLimiter } from './middleware/rateLimit.js';
 import { healthRouter } from './routes/health.js';
-import { pageRouter } from './routes/pages.js';
+import { createPageRouter } from './routes/pages.js';
 import { createCatalogRouter } from './routes/catalog.js';
 import { createAdminRouter } from './routes/admin.js';
 import { createAdminAuthService } from './services/adminAuth.js';
@@ -131,7 +131,7 @@ export function createApp({ repositories = productionRepositories, db = null } =
 
   /* ------------------------------------------------------------ مسیرها */
   app.use('/', healthRouter);
-  app.use('/', pageRouter);
+  app.use('/', createPageRouter(repositories));
   app.use('/', createCatalogRouter(repositories));
 
   /* بخش مدیر. مخزن‌های احراز هویت از همان اجراکنندهٔ پایگاه داده ساخته

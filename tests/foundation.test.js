@@ -24,14 +24,30 @@ const { config, assertDatabaseConfigured } = await import('../src/config/index.j
 const db = await import('../src/db/index.js');
 const { faDigits, formatToman, normalizeMobile, normalizePersian, normalizePostalCode, toEnglishDigits }
   = await import('../src/services/format.js');
+const { createTestDb } = await import('./helpers/testDb.js');
+const { createProductRepository } = await import('../src/db/repositories/products.js');
+const { createCategoryRepository } = await import('../src/db/repositories/categories.js');
+const { createBrandRepository } = await import('../src/db/repositories/brands.js');
 
-const app = createApp();
+/* صفحهٔ اصلی از فاز ۴ به کاتالوگ وصل است، پس برنامه به مخزن نیاز دارد.
+   PGlite داخل همین پروسه اجرا می‌شود و هیچ پایگاه دادهٔ بیرونی لازم
+   ندارد؛ لایهٔ اتصال تولید (src/db/index.js) همچنان دست‌نخورده می‌ماند و
+   آزمون‌های «پیکربندی‌نشده» پایین‌تر دقیقا همان را می‌سنجند. */
+const testDb = await createTestDb();
+const app = createApp({
+  repositories: {
+    products: createProductRepository(testDb),
+    categories: createCategoryRepository(testDb),
+    brands: createBrandRepository(testDb),
+  },
+});
 const server = app.listen(0);
 await new Promise((r) => server.once('listening', r));
 const BASE = `http://127.0.0.1:${server.address().port}`;
 
 test.after(async () => {
   await new Promise((r) => server.close(r));
+  await testDb.close();
   await db.closeDb();
 });
 
@@ -158,14 +174,25 @@ test('صفحه اصلی با lang=fa و dir=rtl رندر می‌شود', async (
   assert.match(html, /viewport/);
 });
 
-test('صفحه اصلی مبلغ را با رقم فارسی و واحد تومان نشان می‌دهد', async () => {
+/* از فاز ۴، صفحهٔ اصلی پوستهٔ واقعی فروشگاه است: هدر با جست‌وجو،
+   محتوا، و فوتر. مقدارهای نمونهٔ فاز ۰ (مبلغ و شمارهٔ فنی ساختگی) از
+   آن برداشته شده‌اند و همان رفتارها حالا روی داده‌های واقعی سنجیده
+   می‌شوند — قالب‌بندی مبلغ در بخش «کمکی‌های قالب‌بندی» همین فایل،
+   و <bdi> روی صفحه‌های کاتالوگ در catalog-routes.test.js. */
+test('صفحهٔ اصلی پوستهٔ فروشگاه را دارد: هدر، جست‌وجو و فوتر', async () => {
   const html = await (await fetch(`${BASE}/`)).text();
-  assert.ok(html.includes('۱۲٬۵۰۰٬۰۰۰ تومان'), 'قالب‌بندی فارسی مبلغ باید در خروجی باشد');
+  assert.match(html, /class="site-header"/, 'هدر فروشگاه');
+  assert.match(html, /action="\/search"/, 'فرم جست‌وجو');
+  assert.match(html, /name="q"/);
+  assert.match(html, /class="site-footer"/, 'فوتر فروشگاه');
+  assert.match(html, /پارس ۲۰۰۸/, 'نام فارسی فروشگاه');
 });
 
-test('شماره فنی داخل bdi قرار می‌گیرد تا جهتش به‌هم نریزد', async () => {
+test('متن جای‌نگهدارِ فاز ۰ دیگر در صفحهٔ اصلی نیست', async () => {
   const html = await (await fetch(`${BASE}/`)).text();
-  assert.match(html, /<bdi class="part-number">9678191580<\/bdi>/);
+  assert.ok(!html.includes('فاز ۰'), 'برچسب فاز ۰ باید برداشته شده باشد');
+  assert.ok(!html.includes('این صفحه فقط برای تأیید پایه فنی است'),
+    'متن توضیحیِ جای‌نگهدار باید رفته باشد');
 });
 
 test('۴۰۴ صفحه فارسی می‌دهد، نه ردپای پشته', async () => {

@@ -23,6 +23,7 @@
   <p class="pagination__summary">
     صفحهٔ <span class="num">{{ pagination.page | faDigits }}</span>
     از <span class="num">{{ pagination.pageCount | faDigits }}</span>
+    (<span class="num">{{ pagination.total | faDigits }}</span> محصول)
   </p>
 </nav>
 {% endif %}

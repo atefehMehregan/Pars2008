@@ -1,0 +1,17 @@
+{# مسیر صفحه. ورودی: crumbs = [{label, url}] — قلم آخر صفحهٔ جاری است
+   و پیوند ندارد. #}
+{% if crumbs and crumbs.length %}
+<nav class="breadcrumb" aria-label="مسیر صفحه">
+  <ol>
+    {% for c in crumbs %}
+      <li>
+        {% if c.url and not loop.last %}
+          <a href="{{ c.url }}">{{ c.label }}</a>
+        {% else %}
+          <span aria-current="page">{{ c.label }}</span>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ol>
+</nav>
+{% endif %}

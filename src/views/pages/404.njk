@@ -1,10 +1,17 @@
 {% extends "layouts/base.njk" %}
 {% block content %}
 <section class="section">
-  <div class="container">
-    <h1 class="page-title">صفحه پیدا نشد</h1>
-    <p class="lede">نشانی‌ای که دنبالش بودید وجود ندارد.</p>
-    <p><a class="btn" href="/">بازگشت به صفحه اصلی</a></p>
+  <div class="container message-page">
+    <span class="message-page__code num" aria-hidden="true">۴۰۴</span>
+    <h1 class="message-page__title">صفحه پیدا نشد</h1>
+    <p class="message-page__text">
+      نشانی‌ای که دنبالش بودید وجود ندارد یا جابه‌جا شده است.
+      می‌توانید قطعه را از کاتالوگ یا جست‌وجو پیدا کنید.
+    </p>
+    <div class="message-page__actions">
+      <a class="btn" href="/products">دیدن همهٔ محصولات</a>
+      <a class="btn btn--ghost" href="/">بازگشت به صفحهٔ اصلی</a>
+    </div>
   </div>
 </section>
 {% endblock %}

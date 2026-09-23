@@ -1,0 +1,52 @@
+{# ============================================================================
+   فوتر فروشگاه.
+
+   هیچ اطلاعات کسب‌وکاری اینجا ساخته نمی‌شود: نه شماره تلفن، نه نشانی،
+   نه ساعت کاری، نه شبکهٔ اجتماعی. تا وقتی مقدار واقعی‌اش را نداریم،
+   جای آن را نگه می‌داریم و همین را صریح می‌گوییم.
+
+   پیوندها فقط به صفحه‌هایی می‌روند که امروز واقعا کار می‌کنند.
+   ========================================================================= #}
+<footer class="site-footer">
+  <div class="container site-footer__grid">
+    <div class="site-footer__col site-footer__brand">
+      <p class="brand__name">{{ storeName }}</p>
+      <p class="brand__latin">{{ storeNameLatin }}</p>
+      <p class="site-footer__text">
+        فروشگاه اینترنتی قطعات یدکی پژو ۲۰۰۸. قطعهٔ مورد نیازتان را با نام،
+        کد کالا یا شماره فنی روی قطعه پیدا کنید.
+      </p>
+    </div>
+
+    <div class="site-footer__col">
+      <h2 class="site-footer__title">دسترسی سریع</h2>
+      <ul class="site-footer__list">
+        <li><a href="/">صفحهٔ اصلی</a></li>
+        <li><a href="/products">همهٔ محصولات</a></li>
+        <li><a href="/search">جست‌وجوی قطعه</a></li>
+      </ul>
+    </div>
+
+    <div class="site-footer__col">
+      <h2 class="site-footer__title">راهنمای پیدا کردن قطعه</h2>
+      <ul class="site-footer__list">
+        <li>جست‌وجو با نام فارسی قطعه</li>
+        <li>جست‌وجو با کد کالا</li>
+        <li>جست‌وجو با شماره فنی (OEM)</li>
+      </ul>
+    </div>
+
+    <div class="site-footer__col">
+      <h2 class="site-footer__title">ارتباط با ما</h2>
+      <p class="site-footer__note">
+        راه‌های ارتباطی هنوز در این صفحه ثبت نشده‌اند و به‌محض نهایی شدن
+        همین‌جا اعلام می‌شوند.
+      </p>
+    </div>
+  </div>
+
+  <div class="container site-footer__bottom">
+    <p>© <span class="num">{{ year | faDigits }}</span> {{ storeName }} — همهٔ حقوق محفوظ است.</p>
+    <p>ساخته‌شده برای دارندگان پژو ۲۰۰۸</p>
+  </div>
+</footer>

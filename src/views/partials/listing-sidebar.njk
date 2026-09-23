@@ -1,13 +1,19 @@
-{# نوار کناری فهرست: دسته‌ها و برندها با تعداد محصول. #}
-<aside class="listing-sidebar" aria-label="فیلترها">
+{# نوار کناری فهرست: دسته‌ها و برندها با تعداد محصول.
+   دستهٔ خالی هم با «۰» می‌آید — حذف بی‌سروصدایش، کاتالوگ را بزرگ‌تر از
+   آنچه هست نشان می‌دهد. #}
+<aside class="listing-sidebar" aria-label="پالایش کاتالوگ">
   <section class="filter-group">
     <h2 class="filter-group__title">دسته‌بندی‌ها</h2>
     {% if categoryList.length %}
       <ul class="filter-list">
         {% for c in categoryList %}
           <li>
-            <a href="/category/{{ c.slug | urlencode }}">{{ c.name }}</a>
-            <span class="filter-list__count num">{{ c.product_count | faDigits }}</span>
+            <a class="{% if category and category.slug == c.slug %}is-current{% endif %}"
+               href="/category/{{ c.slug | urlencode }}"
+               {% if category and category.slug == c.slug %}aria-current="page"{% endif %}>
+              <span>{{ c.name }}</span>
+              <span class="filter-list__count num">{{ c.product_count | faDigits }}</span>
+            </a>
           </li>
         {% endfor %}
       </ul>
@@ -22,8 +28,12 @@
       <ul class="filter-list">
         {% for b in brandList %}
           <li>
-            <a href="/brand/{{ b.slug | urlencode }}">{{ b.name }}</a>
-            <span class="filter-list__count num">{{ b.product_count | faDigits }}</span>
+            <a class="{% if activeBrand and activeBrand.slug == b.slug %}is-current{% endif %}"
+               href="/brand/{{ b.slug | urlencode }}"
+               {% if activeBrand and activeBrand.slug == b.slug %}aria-current="page"{% endif %}>
+              <span>{{ b.name }}</span>
+              <span class="filter-list__count num">{{ b.product_count | faDigits }}</span>
+            </a>
           </li>
         {% endfor %}
       </ul>

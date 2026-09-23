@@ -2,37 +2,49 @@
 
 {% block content %}
 <section class="section">
-  <div class="container listing">
-    {% include "partials/listing-sidebar.njk" %}
+  <div class="container">
+    {% set crumbs = [
+      { label: 'خانه', url: '/' },
+      { label: 'محصولات', url: '/products' },
+      { label: category.name }
+    ] %}
+    {% include "partials/breadcrumb.njk" %}
 
-    <div class="listing__main">
-      <nav class="breadcrumb" aria-label="مسیر صفحه">
-        <a href="/">خانه</a> <span aria-hidden="true">/</span>
-        <a href="/products">محصولات</a> <span aria-hidden="true">/</span>
-        <span>{{ category.name }}</span>
-      </nav>
+    <div class="listing">
+      {% include "partials/listing-sidebar.njk" %}
 
-      <header class="listing__head">
-        <h1 class="page-title">{{ heading }}</h1>
-        <p class="listing__count">
-          <span class="num">{{ result.total | faDigits }}</span> محصول
-        </p>
-      </header>
+      <div class="listing__main">
+        <header class="listing__head">
+          <h1 class="page-title">{{ heading }}</h1>
+          <p class="listing__count">
+            <span class="num">{{ result.total | faDigits }}</span> محصول در این دسته
+          </p>
+        </header>
 
-      {% if category.description %}<p class="lede">{{ category.description }}</p>{% endif %}
+        {% if category.description %}<p class="lede">{{ category.description }}</p>{% endif %}
 
-      {% if result.items.length %}
-        <div class="product-grid">
-          {% for item in result.items %}{% include "partials/product-card.njk" %}{% endfor %}
-        </div>
-        {% include "partials/pagination.njk" %}
-      {% else %}
-        {% set emptyTitle = 'این دسته هنوز محصولی ندارد' %}
-        {% set emptyText = 'به‌زودی محصولات این دسته اضافه می‌شوند.' %}
-        {% set emptyActionUrl = '/products' %}
-        {% set emptyActionLabel = 'دیدن همهٔ محصولات' %}
-        {% include "partials/empty-state.njk" %}
-      {% endif %}
+        {% include "partials/listing-toolbar.njk" %}
+
+        {% if query.brandSlug and activeBrand %}
+          <p class="active-filters">
+            <span>پالایهٔ فعال:</span>
+            <a class="filter-chip" href="{{ currentPath }}">{{ activeBrand.name }} ×</a>
+          </p>
+        {% endif %}
+
+        {% if result.items.length %}
+          <div class="product-grid">
+            {% for item in result.items %}{% include "partials/product-card.njk" %}{% endfor %}
+          </div>
+          {% include "partials/pagination.njk" %}
+        {% else %}
+          {% set emptyTitle = 'این دسته هنوز محصولی ندارد' %}
+          {% set emptyText = 'به‌زودی محصولات این دسته اضافه می‌شوند.' %}
+          {% set emptyActionUrl = '/products' %}
+          {% set emptyActionLabel = 'دیدن همهٔ محصولات' %}
+          {% include "partials/empty-state.njk" %}
+        {% endif %}
+      </div>
     </div>
   </div>
 </section>

@@ -1,34 +1,64 @@
 {% extends "layouts/base.njk" %}
 
+{# فهرست عمومی محصول‌ها. همین قالب صفحهٔ برند را هم رندر می‌کند؛
+   تفاوت فقط در heading و activeBrand است که کنترلر می‌فرستد. #}
+
 {% block content %}
 <section class="section">
-  <div class="container listing">
-    {% include "partials/listing-sidebar.njk" %}
+  <div class="container">
+    {% if activeBrand and not query.brandSlug %}
+      {% set crumbs = [
+        { label: 'خانه', url: '/' },
+        { label: 'محصولات', url: '/products' },
+        { label: activeBrand.name }
+      ] %}
+    {% else %}
+      {% set crumbs = [
+        { label: 'خانه', url: '/' },
+        { label: 'محصولات' }
+      ] %}
+    {% endif %}
+    {% include "partials/breadcrumb.njk" %}
 
-    <div class="listing__main">
-      <header class="listing__head">
-        <h1 class="page-title">{{ heading }}</h1>
-        <p class="listing__count">
-          <span class="num">{{ result.total | faDigits }}</span> محصول
-        </p>
-      </header>
+    <div class="listing">
+      {% include "partials/listing-sidebar.njk" %}
 
-      {% if result.items.length %}
-        <div class="product-grid">
-          {% for item in result.items %}{% include "partials/product-card.njk" %}{% endfor %}
-        </div>
-        {% include "partials/pagination.njk" %}
-      {% elif catalogueEmpty %}
-        {% set emptyTitle = 'هنوز محصولی ثبت نشده است' %}
-        {% set emptyText = 'کاتالوگ در حال آماده‌سازی است. به‌زودی محصولات اینجا نمایش داده می‌شوند.' %}
-        {% include "partials/empty-state.njk" %}
-      {% else %}
-        {% set emptyTitle = 'محصولی با این فیلترها پیدا نشد' %}
-        {% set emptyText = 'فیلترها را بردارید یا دستهٔ دیگری را ببینید.' %}
-        {% set emptyActionUrl = '/products' %}
-        {% set emptyActionLabel = 'دیدن همهٔ محصولات' %}
-        {% include "partials/empty-state.njk" %}
-      {% endif %}
+      <div class="listing__main">
+        <header class="listing__head">
+          <h1 class="page-title">{{ heading }}</h1>
+          <p class="listing__count">
+            <span class="num">{{ result.total | faDigits }}</span> محصول
+          </p>
+        </header>
+
+        {% if not catalogueEmpty %}
+          {% include "partials/listing-toolbar.njk" %}
+        {% endif %}
+
+        {% if query.brandSlug and activeBrand %}
+          <p class="active-filters">
+            <span>پالایهٔ فعال:</span>
+            <a class="filter-chip" href="{{ currentPath }}">{{ activeBrand.name }} ×</a>
+          </p>
+        {% endif %}
+
+        {% if result.items.length %}
+          <div class="product-grid">
+            {% for item in result.items %}{% include "partials/product-card.njk" %}{% endfor %}
+          </div>
+          {% include "partials/pagination.njk" %}
+        {% elif catalogueEmpty %}
+          {% set emptyTitle = 'هنوز محصولی ثبت نشده است' %}
+          {% set emptyText = 'کاتالوگ در حال آماده‌سازی است. به‌زودی محصولات اینجا نمایش داده می‌شوند.' %}
+          {% include "partials/empty-state.njk" %}
+        {% else %}
+          {% set emptyTitle = 'محصولی با این پالایه‌ها پیدا نشد' %}
+          {% set emptyText = 'پالایه‌ها را بردارید یا دستهٔ دیگری را ببینید.' %}
+          {% set emptyActionUrl = '/products' %}
+          {% set emptyActionLabel = 'دیدن همهٔ محصولات' %}
+          {% include "partials/empty-state.njk" %}
+        {% endif %}
+      </div>
     </div>
   </div>
 </section>

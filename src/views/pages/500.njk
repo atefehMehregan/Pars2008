@@ -1,10 +1,20 @@
 {% extends "layouts/base.njk" %}
 {% block content %}
 <section class="section">
-  <div class="container">
-    <h1 class="page-title">خطای سرور</h1>
-    <p class="lede">مشکلی پیش آمد. لطفا بعدا دوباره تلاش کنید.</p>
-    {% if ref %}<p class="note">کد پیگیری: <bdi class="part-number">{{ ref }}</bdi></p>{% endif %}
+  <div class="container message-page">
+    <span class="message-page__code num" aria-hidden="true">۵۰۰</span>
+    <h1 class="message-page__title">خطای سرور</h1>
+    <p class="message-page__text">
+      مشکلی در سمت ما پیش آمد و این صفحه نمایش داده نشد. لطفا کمی بعد
+      دوباره تلاش کنید.
+    </p>
+    <div class="message-page__actions">
+      <a class="btn" href="/">بازگشت به صفحهٔ اصلی</a>
+    </div>
+    {# کد پیگیری فقط یک شناسهٔ تصادفی است؛ هیچ جزئیاتی از خطا بیرون نمی‌رود. #}
+    {% if ref %}
+      <p class="message-page__ref">کد پیگیری: <bdi class="part-number">{{ ref }}</bdi></p>
+    {% endif %}
   </div>
 </section>
 {% endblock %}

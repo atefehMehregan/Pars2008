@@ -1,0 +1,43 @@
+{# ============================================================================
+   نوار مرتب‌سازی و پالایش فهرست.
+
+   یک فرم GET ساده. هیچ جاوااسکریپتی لازم نیست: مرورگر خودش نشانی را
+   می‌سازد و همان پارامترهای فهرست‌سفیدِ موجود (sort / availability /
+   brand) را می‌فرستد. هر پارامتر ناشناخته‌ای سمت سرور نادیده گرفته
+   می‌شود، پس این فرم نمی‌تواند چیز تازه‌ای به کوئری اضافه کند.
+
+   action همان مسیر جاری است، پس یک قالب برای /products، /category/... و
+   /brand/... کار می‌کند. فرستادن فرم، صفحه را به ۱ برمی‌گرداند — که
+   درست است، چون نتیجه عوض شده.
+   ========================================================================= #}
+<form class="listing-toolbar" action="{{ currentPath }}" method="get">
+  {% if query.brandSlug %}
+    <input type="hidden" name="brand" value="{{ query.brandSlug }}" />
+  {% endif %}
+
+  <div class="listing-toolbar__field">
+    <label class="listing-toolbar__label" for="sort">ترتیب نمایش</label>
+    <select class="listing-toolbar__select" id="sort" name="sort">
+      <option value="newest" {% if query.sort == 'newest' %}selected{% endif %}>تازه‌ترین</option>
+      <option value="price-asc" {% if query.sort == 'price-asc' %}selected{% endif %}>ارزان‌ترین</option>
+      <option value="price-desc" {% if query.sort == 'price-desc' %}selected{% endif %}>گران‌ترین</option>
+      <option value="name" {% if query.sort == 'name' %}selected{% endif %}>بر اساس نام</option>
+    </select>
+  </div>
+
+  <div class="listing-toolbar__field">
+    <label class="listing-toolbar__label" for="availability">وضعیت موجودی</label>
+    <select class="listing-toolbar__select" id="availability" name="availability">
+      <option value="">همه</option>
+      <option value="in_stock" {% if query.availability == 'in_stock' %}selected{% endif %}>موجود</option>
+      <option value="on_order" {% if query.availability == 'on_order' %}selected{% endif %}>قابل سفارش</option>
+      <option value="out_of_stock" {% if query.availability == 'out_of_stock' %}selected{% endif %}>ناموجود</option>
+      <option value="discontinued" {% if query.availability == 'discontinued' %}selected{% endif %}>تولید متوقف شده</option>
+    </select>
+  </div>
+
+  <div class="listing-toolbar__actions">
+    <button class="btn btn--sm" type="submit">اعمال</button>
+    <a class="btn btn--ghost btn--sm" href="{{ currentPath }}">حذف پالایه‌ها</a>
+  </div>
+</form>

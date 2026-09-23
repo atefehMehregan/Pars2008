@@ -1,0 +1,50 @@
+{# ============================================================================
+   هدر فروشگاه.
+
+   سه چیز و نه بیشتر: برند، جست‌وجو، ناوبری. هیچ پیوندی به قابلیتی که
+   وجود ندارد گذاشته نمی‌شود — نه سبد خرید، نه حساب کاربری — چون پیوندِ
+   مرده بدتر از نبودِ پیوند است.
+
+   موبایل با ترتیب flex کار می‌کند، نه با منوی کشویی: دو پیوند ناوبری
+   ارزش یک دکمهٔ همبرگری و جاوااسکریپتش را ندارند.
+   ========================================================================= #}
+<header class="site-header">
+  <div class="site-header__top">
+    <div class="container">
+      <p>قطعات یدکی پژو ۲۰۰۸ — جست‌وجو بر اساس نام قطعه، کد کالا یا شماره فنی</p>
+    </div>
+  </div>
+
+  <div class="container site-header__bar">
+    <a class="brand" href="/">
+      {# نشانِ متنی. جای لوگوی واقعی را نگه می‌دارد بدون اینکه لوگویی
+         اختراع شود؛ برای صفحه‌خوان تکراری است، پس پنهان می‌ماند. #}
+      <span class="brand__mark" aria-hidden="true">۲۰۰۸</span>
+      <span class="brand__text">
+        <span class="brand__name">{{ storeName }}</span>
+        <span class="brand__latin">{{ storeNameLatin }}</span>
+      </span>
+    </a>
+
+    <form class="site-search" action="/search" method="get" role="search">
+      <label class="sr-only" for="site-search-input">جست‌وجوی قطعه</label>
+      <input class="site-search__input" id="site-search-input" type="search" name="q"
+             value="{{ term | default('') }}"
+             placeholder="نام قطعه، کد کالا یا شماره فنی" />
+      <button class="site-search__button" type="submit">جست‌وجو</button>
+    </form>
+
+    <nav class="site-nav" aria-label="ناوبری اصلی">
+      <ul class="site-nav__list">
+        <li>
+          <a class="site-nav__link{% if currentPath == '/' %} is-current{% endif %}"
+             href="/"{% if currentPath == '/' %} aria-current="page"{% endif %}>خانه</a>
+        </li>
+        <li>
+          <a class="site-nav__link{% if currentPath == '/products' %} is-current{% endif %}"
+             href="/products"{% if currentPath == '/products' %} aria-current="page"{% endif %}>محصولات</a>
+        </li>
+      </ul>
+    </nav>
+  </div>
+</header>

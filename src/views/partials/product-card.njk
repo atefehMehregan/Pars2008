@@ -1,4 +1,5 @@
-{# کارت محصول — در فهرست، دسته، برند و جست‌وجو یکسان است. #}
+{# کارت محصول — در فهرست، دسته، برند، جست‌وجو و صفحهٔ اصلی یکسان است.
+   کل کارت یک پیوند است، پس هدفِ لمس در موبایل بزرگ می‌ماند. #}
 <article class="product-card">
   <a class="product-card__link" href="/product/{{ item.slug | urlencode }}">
     <div class="product-card__media">
@@ -10,7 +11,7 @@
         </picture>
       {% else %}
         {# تصویری هنوز بارگذاری نشده — جای آن نگه داشته می‌شود تا چیدمان نپرد. #}
-        <div class="product-card__placeholder" aria-hidden="true"></div>
+        {% include "partials/media-placeholder.njk" %}
       {% endif %}
 
       {% if item.sale_price_toman %}

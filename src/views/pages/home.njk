@@ -1,35 +1,214 @@
 {% extends "layouts/base.njk" %}
 
+{# ============================================================================
+   صفحهٔ اصلی فروشگاه.
+
+   هر بخش فقط وقتی رندر می‌شود که دادهٔ واقعی داشته باشد. هیچ کارت نمونه،
+   هیچ محصول ساختگی و هیچ عدد تزئینی‌ای اینجا نیست: با کاتالوگ خالی،
+   صفحه همچنان یک فروشگاه کامل به نظر می‌رسد و صادقانه می‌گوید هنوز
+   محصولی ثبت نشده است.
+   ========================================================================= #}
+
 {% block content %}
-<section class="section">
-  <div class="container">
-    <p class="eyebrow">فاز ۰ — پایه فنی</p>
-    <h1 class="page-title">{{ tagline }}</h1>
-    <p class="lede">
-      این صفحه فقط برای تأیید پایه فنی است: زبان فارسی، جهت راست‌به‌چپ،
-      رمزگذاری UTF-8 و چیدمان واکنش‌گرا. طراحی و محتوای واقعی فروشگاه در
-      فازهای بعد ساخته می‌شود.
-    </p>
 
-    <dl class="facts">
-      <div class="facts__row">
-        <dt>نمونه قیمت</dt>
-        <dd class="num">{{ 12500000 | toman }}</dd>
+{# ------------------------------------------------------------- هیرو #}
+<section class="hero">
+  <div class="container hero__inner">
+    <div>
+      <p class="hero__eyebrow">قطعات یدکی پژو ۲۰۰۸</p>
+      <h1 class="hero__title">قطعهٔ درست برای پژو ۲۰۰۸ شما</h1>
+      <p class="hero__lede">
+        کاتالوگ فقط روی همین خودرو متمرکز است. قطعه را با نام فارسی،
+        کد کالا یا شماره فنی روی خودِ قطعه پیدا کنید.
+      </p>
+      <div class="hero__actions">
+        <a class="btn btn--onDark" href="/products">دیدن همهٔ محصولات</a>
+        {% if categoryList.length %}
+          <a class="btn btn--ghost btn--onDark" href="#categories">مرور دسته‌بندی‌ها</a>
+        {% endif %}
       </div>
-      <div class="facts__row">
-        <dt>نمونه رقم فارسی</dt>
-        <dd class="num">{{ "1403" | faDigits }}</dd>
-      </div>
-      <div class="facts__row">
-        <dt>نمونه شماره فنی</dt>
-        <dd><bdi class="part-number">9678191580</bdi></dd>
-      </div>
-    </dl>
+    </div>
 
-    <p class="note">
-      شماره‌های فنی داخل متن فارسی با <code>&lt;bdi&gt;</code> محصور می‌شوند تا
-      جهت‌شان در چیدمان راست‌به‌چپ به‌هم نریزد.
-    </p>
+    <div class="hero__panel">
+      <h2 class="hero__panel-title">جست‌وجوی قطعه</h2>
+      <p class="hero__panel-text">
+        شماره فنی را با یا بدون خط تیره وارد کنید؛ نتیجه یکی است.
+      </p>
+      <form class="site-search" action="/search" method="get" role="search">
+        <label class="sr-only" for="hero-search-input">جست‌وجوی قطعه</label>
+        <input class="site-search__input" id="hero-search-input" type="search" name="q"
+               placeholder="مثلا: فیلتر روغن یا ۹۶۷۸۱۹۱۵۸۰" />
+        <button class="site-search__button" type="submit">جست‌وجو</button>
+      </form>
+      <ul class="hero__hints">
+        <li>جست‌وجو با نام فارسی قطعه، حتی ناقص</li>
+        <li>جست‌وجو با کد کالا</li>
+        <li>جست‌وجو با شماره فنی (OEM)</li>
+      </ul>
+    </div>
   </div>
 </section>
+
+{# -------------------------------------------------------- دسته‌بندی‌ها #}
+{% if categoryList.length %}
+<section class="home-section home-section--tint" id="categories">
+  <div class="container">
+    <div class="home-section__head">
+      <div>
+        <h2 class="home-section__title">دسته‌بندی‌ها</h2>
+        <p class="home-section__text">از دسته شروع کنید یا مستقیم جست‌وجو کنید.</p>
+      </div>
+      <a class="home-section__link" href="/products">همهٔ محصولات</a>
+    </div>
+
+    <div class="category-grid">
+      {% for c in categoryList %}
+        <a class="category-card" href="/category/{{ c.slug | urlencode }}">
+          <span class="category-card__name">{{ c.name }}</span>
+          <span class="category-card__count num">{{ c.product_count | faDigits }}</span>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ------------------------------------------------------ قفسهٔ «ویژه» #}
+{% if featuredItems.length %}
+<section class="home-section">
+  <div class="container">
+    <div class="home-section__head">
+      <h2 class="home-section__title">محصولات ویژه</h2>
+      <a class="home-section__link" href="/products">دیدن همه</a>
+    </div>
+    <div class="product-grid">
+      {% for item in featuredItems %}{% include "partials/product-card.njk" %}{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ------------------------------------------------------- قفسهٔ «تازه» #}
+{% if freshItems.length %}
+<section class="home-section">
+  <div class="container">
+    <div class="home-section__head">
+      <h2 class="home-section__title">تازه به کاتالوگ اضافه شد</h2>
+      <a class="home-section__link" href="/products?sort=newest">دیدن همه</a>
+    </div>
+    <div class="product-grid">
+      {% for item in freshItems %}{% include "partials/product-card.njk" %}{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ------------------------------------------------- قفسهٔ «تازه‌ترین» #}
+{# فقط وقتی هیچ محصول ویژه یا تازه‌ای علامت نخورده باشد؛ وگرنه همان
+   محصول‌ها دو بار پشت سر هم تکرار می‌شدند. #}
+{% if latestItems.length %}
+<section class="home-section">
+  <div class="container">
+    <div class="home-section__head">
+      <div>
+        <h2 class="home-section__title">تازه‌ترین محصول‌ها</h2>
+        <p class="home-section__text">
+          <span class="num">{{ totalProducts | faDigits }}</span> محصول در کاتالوگ
+        </p>
+      </div>
+      <a class="home-section__link" href="/products">دیدن همه</a>
+    </div>
+    <div class="product-grid">
+      {% for item in latestItems %}{% include "partials/product-card.njk" %}{% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# --------------------------------------------------- کاتالوگ خالی #}
+{% if catalogueEmpty %}
+<section class="home-section">
+  <div class="container">
+    {% set emptyTitle = 'هنوز محصولی ثبت نشده است' %}
+    {% set emptyText = 'کاتالوگ در حال آماده‌سازی است. به‌زودی قطعات پژو ۲۰۰۸ اینجا نمایش داده می‌شوند.' %}
+    {% set emptyActionUrl = '/products' %}
+    {% set emptyActionLabel = 'دیدن صفحهٔ محصولات' %}
+    {% include "partials/empty-state.njk" %}
+  </div>
+</section>
+{% endif %}
+
+{# ------------------------------------------------------------ برندها #}
+{% if brandList.length %}
+<section class="home-section">
+  <div class="container">
+    <div class="home-section__head">
+      <h2 class="home-section__title">برندها</h2>
+    </div>
+    <div class="brand-strip">
+      {% for b in brandList %}
+        <a class="brand-chip" href="/brand/{{ b.slug | urlencode }}">{{ b.name }}</a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{# ------------------------------------------------------- چرا اینجا #}
+{# فقط توانایی‌های واقعی همین نسخه. هیچ ادعایی دربارهٔ ارسال، گارانتی
+   یا پشتیبانی — چون هیچ‌کدام هنوز پیاده نشده‌اند. #}
+<section class="home-section home-section--tint">
+  <div class="container">
+    <div class="home-section__head">
+      <h2 class="home-section__title">کار کردن با این کاتالوگ</h2>
+    </div>
+    <div class="value-grid">
+      <div class="value-card">
+        <h3 class="value-card__title">جست‌وجو با شماره فنی</h3>
+        <p class="value-card__text">
+          شماره فنی را همان‌طور که روی قطعه نوشته شده وارد کنید؛ خط تیره،
+          فاصله و رقم فارسی فرقی نمی‌کند.
+        </p>
+      </div>
+      <div class="value-card">
+        <h3 class="value-card__title">فقط پژو ۲۰۰۸</h3>
+        <p class="value-card__text">
+          کاتالوگ روی قطعات همین خودرو متمرکز است، نه یک فروشگاه عمومی
+          با هزاران قطعهٔ بی‌ربط.
+        </p>
+      </div>
+      <div class="value-card">
+        <h3 class="value-card__title">اطلاعات سازگاری</h3>
+        <p class="value-card__text">
+          هر قطعه می‌تواند یادداشت سازگاری و فهرست خودروهای سازگار داشته
+          باشد تا پیش از خرید مطمئن شوید.
+        </p>
+      </div>
+      <div class="value-card">
+        <h3 class="value-card__title">فارسی و شفاف</h3>
+        <p class="value-card__text">
+          نام قطعه، دسته‌بندی و نشانی صفحه‌ها فارسی است و قیمت‌ها با رقم
+          فارسی و واحد تومان نمایش داده می‌شوند.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+{# ---------------------------------------------------------- فراخوان #}
+<section class="section">
+  <div class="container">
+    <div class="cta-band">
+      <div>
+        <h2 class="cta-band__title">دنبال قطعهٔ مشخصی هستید؟</h2>
+        <p class="cta-band__text">
+          کل کاتالوگ را ببینید یا نام قطعه، کد کالا و شماره فنی را در کادر
+          جست‌وجوی بالای صفحه بنویسید.
+        </p>
+      </div>
+      <a class="btn btn--onDark" href="/products">رفتن به کاتالوگ</a>
+    </div>
+  </div>
+</section>
+
 {% endblock %}

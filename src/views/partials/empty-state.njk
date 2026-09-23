@@ -1,5 +1,13 @@
-{# حالت خالی. پیام باید بگوید چه اتفاقی افتاده، نه فقط «چیزی نیست». #}
+{# حالت خالی. پیام باید بگوید چه اتفاقی افتاده و یک راه بیرون بدهد،
+   نه فقط «چیزی نیست». #}
 <div class="empty-state">
+  <div class="empty-state__icon" aria-hidden="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+         stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M20 20l-3.8-3.8" />
+    </svg>
+  </div>
   <h2 class="empty-state__title">{{ emptyTitle }}</h2>
   {% if emptyText %}<p class="empty-state__text">{{ emptyText }}</p>{% endif %}
   {% if emptyActionUrl %}
