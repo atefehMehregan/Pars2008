@@ -17,9 +17,11 @@
 
   <div class="container site-header__bar">
     <a class="brand" href="/">
-      {# نشانِ متنی. جای لوگوی واقعی را نگه می‌دارد بدون اینکه لوگویی
-         اختراع شود؛ برای صفحه‌خوان تکراری است، پس پنهان می‌ماند. #}
-      <span class="brand__mark" aria-hidden="true">۲۰۰۸</span>
+      {# نشان برند. تزئینی است و نام فروشگاه بلافاصله بعدش می‌آید، پس از
+         دید صفحه‌خوان پنهان می‌ماند و alt خالی دارد.
+         width/height صریح‌اند تا پیش از بار شدن تصویر، چیدمان نپرد. #}
+      <img class="brand__mark" src="/img/logo-mark.svg" alt="" aria-hidden="true"
+           width="42" height="42" />
       <span class="brand__text">
         <span class="brand__name">{{ storeName }}</span>
         <span class="brand__latin">{{ storeNameLatin }}</span>

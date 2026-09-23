@@ -240,6 +240,7 @@ test('همهٔ پیوندهای صفحهٔ اصلی به مسیرهای واقع
     /^\/brand\//,
     /^\/product\//,
     /^\/css\//,                     // شیوه‌نامه
+    /^\/img\//,                     // نشان برند و favicon
   ];
   for (const href of hrefs) {
     assert.ok(known.some((re) => re.test(href)), `پیوند ناشناخته: ${href}`);
