@@ -26,6 +26,10 @@ export const LIMITS = {
   SORT_ORDER_MIN: -10_000,
   SORT_ORDER_MAX: 10_000,
   SLUG_MAX: 200,
+  /* بازهٔ سال خودرو. کران‌ها سخاوتمندند؛ هدف فقط گرفتن ورودیِ آشکارا
+     غلط است (مثلا ۲۰ یا ۲۰۲۵۰)، نه داوری دربارهٔ اینکه چه سالی معقول است. */
+  YEAR_MIN: 1900,
+  YEAR_MAX: 2100,
 };
 
 /* ------------------------------------------------------- نرمال‌سازی ----- */
@@ -165,6 +169,22 @@ export function salePriceRule(salePrice, price, { label = 'قیمت فروش و�
   if (salePrice === null || salePrice === undefined) return null;
   if (price === null || price === undefined) return null;
   if (salePrice >= price) return `${label} باید کمتر از قیمت اصلی باشد.`;
+  return null;
+}
+
+/**
+ * قاعدهٔ بین-فیلدیِ بازهٔ سال خودرو.
+ *
+ * قید پایگاه داده vehicles_year_range همین را می‌گوید، ولی برخلاف قیمت
+ * ویژه اینجا *برابری* مجاز است: خودرویی که فقط یک سال تولید شده،
+ * year_from و year_to برابر دارد.
+ *
+ * @returns {string|null} پیام خطا، یا null اگر مشکلی نیست
+ */
+export function yearRangeRule(yearFrom, yearTo, { label = 'تا سال' } = {}) {
+  if (yearFrom === null || yearFrom === undefined) return null;
+  if (yearTo === null || yearTo === undefined) return null;
+  if (yearTo < yearFrom) return `${label} نباید کوچک‌تر از «از سال» باشد.`;
   return null;
 }
 

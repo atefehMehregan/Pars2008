@@ -1,0 +1,76 @@
+{% extends "layouts/admin.njk" %}
+{% import "partials/admin-field.njk" as f %}
+{% import "partials/admin-delete-form.njk" as danger %}
+
+{% block content %}
+<section class="admin-section">
+  <div class="admin-headline">
+    <h1 class="admin-title">{{ 'خودروی تازه' if mode == 'new' else 'ویرایش خودرو' }}</h1>
+    <a class="btn btn--quiet" href="/admin/catalogue/vehicles">بازگشت به فهرست</a>
+  </div>
+
+  {% include "partials/admin-flash.njk" %}
+
+  {% if errors._general %}
+    <p class="admin-flash admin-flash--error" role="alert">{{ errors._general }}</p>
+  {% endif %}
+  {% if (errors | length) and not errors._delete and not errors._general %}
+    <p class="admin-flash admin-flash--error" role="alert">فرم ذخیره نشد. کادرهای مشخص‌شده را اصلاح کنید.</p>
+  {% endif %}
+
+  <form class="admin-form"
+        action="{{ '/admin/catalogue/vehicles' if mode == 'new' else '/admin/catalogue/vehicles/' + (vehicle.id | string) }}"
+        method="post">
+    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">شناسایی</h2>
+      <div class="form-grid">
+        {{ f.text('make', 'سازنده', values.make, errors, 'text', true) }}
+        {{ f.text('model', 'مدل', values.model, errors, 'text', true) }}
+        {{ f.text('displayName', 'نام نمایشی', values.displayName, errors, 'text', true,
+                  'همان چیزی که مشتری در صفحهٔ محصول می‌بیند.') }}
+        {{ f.text('slug', 'نشانی', values.slug, errors, 'text', false,
+                  'خالی بگذارید تا از روی نام نمایشی ساخته شود.') }}
+      </div>
+    </div>
+
+    <div class="admin-panel">
+      <h2 class="admin-panel__title">مشخصات</h2>
+      <p class="field__hint">
+        این بخش‌ها اختیاری‌اند. فقط چیزی را پر کنید که واقعا می‌دانید؛
+        خالی ماندن بهتر از حدس زدن است.
+      </p>
+      <div class="form-grid">
+        {{ f.text('generation', 'نسل', values.generation, errors) }}
+        {{ f.text('engineCode', 'کد موتور', values.engineCode, errors, 'text', false, '', 'ltr') }}
+        {{ f.text('engineLabel', 'عنوان موتور', values.engineLabel, errors) }}
+        {{ f.text('yearFrom', 'از سال', values.yearFrom, errors, 'text', false,
+                  'میلادی. رقم فارسی هم پذیرفته می‌شود.') }}
+        {{ f.text('yearTo', 'تا سال', values.yearTo, errors, 'text', false,
+                  'نباید کوچک‌تر از «از سال» باشد.') }}
+        {{ f.text('sortOrder', 'ترتیب نمایش', values.sortOrder, errors, 'text', false,
+                  'عدد کوچک‌تر، بالاتر.') }}
+      </div>
+      {{ f.check('isActive', 'فعال — در سایت دیده شود', values.isActive) }}
+    </div>
+
+    <div class="admin-form__actions">
+      <button class="btn btn--primary" type="submit">
+        {{ 'ثبت خودرو' if mode == 'new' else 'ذخیرهٔ تغییرها' }}
+      </button>
+      <a class="btn btn--quiet" href="/admin/catalogue/vehicles">انصراف</a>
+    </div>
+  </form>
+
+  {% if mode == 'edit' %}
+    {{ danger.dangerZone(
+         '/admin/catalogue/vehicles/' + (vehicle.id | string) + '/delete',
+         adminCsrfToken,
+         'حذف دائمی این خودرو',
+         'اگر محصولی به این خودرو وصل باشد، حذف انجام نمی‌شود و دلیلش گفته خواهد شد. برای پنهان کردن موقت، «غیرفعال» کافی است.',
+         errors._delete
+       ) }}
+  {% endif %}
+</section>
+{% endblock %}

@@ -11,6 +11,7 @@
     <a class="admin-subnav__link is-current" href="/admin/catalogue/products">محصول‌ها</a>
     <a class="admin-subnav__link" href="/admin/catalogue/categories">دسته‌ها</a>
     <a class="admin-subnav__link" href="/admin/catalogue/brands">برندها</a>
+  <a class="admin-subnav__link" href="/admin/catalogue/vehicles">خودروها</a>
   </nav>
 
   {% include "partials/admin-flash.njk" %}
@@ -55,6 +56,15 @@
         <option value="">همه</option>
         <option value="yes" {% if filters.active == 'yes' %}selected{% endif %}>فعال</option>
         <option value="no"  {% if filters.active == 'no'  %}selected{% endif %}>غیرفعال</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="field__label" for="f-sort">ترتیب</label>
+      <select class="field__input" id="f-sort" name="sort">
+        {% for key, label in sortLabels %}
+          <option value="{{ key }}" {% if filters.sort == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
       </select>
     </div>
 
@@ -127,6 +137,7 @@
                     <input type="hidden" name="category" value="{{ filters.category or '' }}" />
                     <input type="hidden" name="brand" value="{{ filters.brand or '' }}" />
                     <input type="hidden" name="active" value="{{ filters.active }}" />
+                    <input type="hidden" name="sort" value="{{ filters.sort }}" />
                     <input type="hidden" name="page" value="{{ result.page }}" />
                     <button class="btn {{ 'btn--warn' if p.is_active else 'btn--primary' }}" type="submit">
                       {{ 'غیرفعال کردن' if p.is_active else 'فعال کردن' }}

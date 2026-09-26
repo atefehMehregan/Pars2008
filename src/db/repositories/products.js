@@ -204,6 +204,58 @@ export function createProductRepository(db) {
     return res.rows;
   }
 
+  /**
+   * جایگزینی کاملِ خودروهای سازگار یک محصول — در *یک* دستور.
+   *
+   * چرا یک دستور و نه «حذف سپس درج»؟ چون db.query روی استخر pg ممکن
+   * است هر بار اتصال دیگری بگیرد، پس BEGIN/COMMIT دستی در این لایه
+   * می‌توانست روی دو اتصال متفاوت بیفتد. یک CTE این تله را کامل دور
+   * می‌زند و اتمی هم هست.
+   *
+   * رفتار:
+   *   * پیوندی که در فهرست تازه نیست حذف می‌شود.
+   *   * پیوند تازه درج می‌شود؛ تکراری با ON CONFLICT بی‌صدا رد می‌شود
+   *     (کلید اصلیِ مرکب خودش تکرار را ناممکن می‌کند).
+   *   * فهرست خالی یعنی «همهٔ پیوندها برداشته شوند».
+   *
+   * @param {number|string} productId
+   * @param {Array<number|string>} vehicleIds
+   * @returns {Promise<number>} شمار پیوندهای نهایی
+   */
+  async function setVehicles(productId, vehicleIds) {
+    const ids = (Array.isArray(vehicleIds) ? vehicleIds : [])
+      .map((v) => Number(v))
+      .filter((v) => Number.isSafeInteger(v) && v > 0);
+
+    try {
+      await db.query(
+        `WITH removed AS (
+           DELETE FROM product_vehicle
+            WHERE product_id = $1 AND NOT (vehicle_id = ANY($2::bigint[]))
+         )
+         INSERT INTO product_vehicle (product_id, vehicle_id)
+         SELECT $1, v FROM unnest($2::bigint[]) AS v
+         ON CONFLICT (product_id, vehicle_id) DO NOTHING`,
+        [productId, ids]
+      );
+    } catch (err) {
+      throw mapWriteError(err);
+    }
+
+    const res = await db.query(
+      'SELECT COUNT(*)::int AS n FROM product_vehicle WHERE product_id = $1', [productId]);
+    return res.rows[0].n;
+  }
+
+  /** شناسهٔ خودروهای سازگار — برای پرکردن فرم مدیر. */
+  async function vehicleIdsFor(productId) {
+    const res = await db.query(
+      'SELECT vehicle_id FROM product_vehicle WHERE product_id = $1 ORDER BY vehicle_id',
+      [productId]
+    );
+    return res.rows.map((r) => Number(r.vehicle_id));
+  }
+
   /** خودروهای سازگار با یک محصول. */
   async function vehiclesFor(productId) {
     const res = await db.query(
@@ -558,8 +610,8 @@ export function createProductRepository(db) {
   }
 
   return {
-    list, findBySlug, imagesFor, vehiclesFor, search,
+    list, findBySlug, imagesFor, vehiclesFor, vehicleIdsFor, search,
     adminList, findById, create, update, remove, setActive, adjustStock,
-    refreshSearchTextForBrand,
+    setVehicles, refreshSearchTextForBrand,
   };
 }

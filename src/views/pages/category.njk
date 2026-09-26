@@ -25,10 +25,15 @@
 
         {% include "partials/listing-toolbar.njk" %}
 
-        {% if query.brandSlug and activeBrand %}
+        {% if (query.brandSlug and activeBrand) or (query.vehicleSlug and activeVehicle) %}
           <p class="active-filters">
             <span>پالایهٔ فعال:</span>
-            <a class="filter-chip" href="{{ currentPath }}">{{ activeBrand.name }} ×</a>
+            {% if query.brandSlug and activeBrand %}
+              <a class="filter-chip" href="{{ currentPath }}">{{ activeBrand.name }} ×</a>
+            {% endif %}
+            {% if query.vehicleSlug and activeVehicle %}
+              <a class="filter-chip" href="{{ currentPath }}">{{ activeVehicle.display_name }} ×</a>
+            {% endif %}
           </p>
         {% endif %}
 

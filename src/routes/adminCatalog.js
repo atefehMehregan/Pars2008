@@ -31,8 +31,13 @@
 import express from 'express';
 import { createAdminCatalogController } from '../controllers/adminCatalogController.js';
 
-/* موجودیت‌هایی که شکل مسیرهایشان یکسان است. */
+/* موجودیت‌هایی که *همیشه* باید تزریق شده باشند. */
 const ENTITIES = ['products', 'categories', 'brands'];
+
+/* موجودیت‌هایی که مسیر دارند — برای نگهبان شناسه. خودرو اینجا هست ولی
+   در فهرست بالا نیست: مثل مسیریاب تصویر، فقط وقتی سوار می‌شود که مخزنش
+   تزریق شده باشد، پس آزمونی که مجموعهٔ ناقصی می‌دهد ۴۰۴ می‌گیرد نه خطا. */
+const ROUTE_ENTITIES = [...ENTITIES, 'vehicles'];
 
 /**
  * مسیریاب مدیریت کاتالوگ.
@@ -89,7 +94,7 @@ export function createAdminCatalogRouter({
 
     /* همان رفتار «پیدا نشد» که برای شناسهٔ معتبرِ ناموجود وجود دارد. */
     const entity = req.path.split('/')[1];
-    const list = ENTITIES.includes(entity) ? entity : 'products';
+    const list = ROUTE_ENTITIES.includes(entity) ? entity : 'products';
     return res.redirect(303, `${req.baseUrl}/${list}?error=not_found`);
   });
 
@@ -125,6 +130,17 @@ export function createAdminCatalogRouter({
   router.post('/brands/:id', c.brandUpdate);
   router.post('/brands/:id/delete', c.brandDelete);
   router.post('/brands/:id/active', c.brandSetActive);
+
+  /* خودروها — فاز ۶. همان شکل مسیرهای برند، و فقط وقتی مخزنش هست. */
+  if (repositories.vehicles) {
+    router.get('/vehicles', c.vehicleIndex);
+    router.get('/vehicles/new', c.vehicleNew);
+    router.post('/vehicles', c.vehicleCreate);
+    router.get('/vehicles/:id/edit', c.vehicleEdit);
+    router.post('/vehicles/:id', c.vehicleUpdate);
+    router.post('/vehicles/:id/delete', c.vehicleDelete);
+    router.post('/vehicles/:id/active', c.vehicleSetActive);
+  }
 
   return router;
 }

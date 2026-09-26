@@ -15,13 +15,14 @@
  * ==========================================================================*/
 import { AUDIT_ACTIONS } from '../services/audit.js';
 import { pageWindow } from '../services/pagination.js';
+import { faDigits } from '../services/format.js';
 import { integer, oneOf, specsField, LIMITS } from '../services/validate.js';
 import {
-  parseProductForm, parseCategoryForm, parseBrandForm,
-  parseProductListQuery, buildAdminQuery,
+  parseProductForm, parseCategoryForm, parseBrandForm, parseVehicleForm,
+  parseVehicleSelection, parseProductListQuery, buildAdminQuery,
   changedFields, describeWriteError,
-  PRODUCT_COLUMN_MAP, CATEGORY_COLUMN_MAP, BRAND_COLUMN_MAP,
-  AVAILABILITY_VALUES, AVAILABILITY_LABELS,
+  PRODUCT_COLUMN_MAP, CATEGORY_COLUMN_MAP, BRAND_COLUMN_MAP, VEHICLE_COLUMN_MAP,
+  AVAILABILITY_VALUES, AVAILABILITY_LABELS, SORT_LABELS,
   FLASH_SUCCESS, FLASH_ERRORS, DELETE_ERROR_CODES,
 } from '../services/catalogAdminForm.js';
 
@@ -29,7 +30,7 @@ const BASE = '/admin/catalogue';
 const PER_PAGE = 20;
 
 export function createAdminCatalogController({ repositories, audit, storage = null }) {
-  const { products, categories, brands, productImages = null } = repositories;
+  const { products, categories, brands, productImages = null, vehicles = null } = repositories;
 
   /* ------------------------------------------------------- کمکی‌ها ---- */
 
@@ -85,8 +86,12 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
   /* ==================================================== محصول‌ها ====== */
 
   async function productSelects() {
-    const [cats, brs] = await Promise.all([categories.adminList(), brands.adminList()]);
-    return { categoryOptions: cats, brandOptions: brs };
+    const [cats, brs, vehs] = await Promise.all([
+      categories.adminList(),
+      brands.adminList(),
+      vehicles ? vehicles.adminList() : Promise.resolve([]),
+    ]);
+    return { categoryOptions: cats, brandOptions: brs, vehicleOptions: vehs };
   }
 
   function emptyProduct() {
@@ -126,6 +131,7 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
 
   async function renderProductForm(res, {
     status = 200, mode, values, errors = {}, warnings = [], product = null,
+    selectedVehicleIds = [],
   }) {
     const selects = await productSelects();
     return res.status(status).render('pages/admin/products/form', {
@@ -137,14 +143,74 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
       product,
       availabilityValues: AVAILABILITY_VALUES,
       availabilityLabels: AVAILABILITY_LABELS,
+      selectedVehicleIds,
       ...selects,
       flash: null,
     });
   }
 
+  /* ------------------------------------------- سازگاری خودرو ----------
+   * نگهبانِ «پاک نشدن ناخواسته».
+   *
+   * مرورگر برای یک select چندگزینه‌ای که هیچ گزینه‌ای در آن انتخاب نشده
+   * *هیچ چیز* نمی‌فرستد — که از «همه را بردار» قابل تشخیص نیست. پس فرم
+   * یک فیلد پنهان هم می‌فرستد و فقط وقتی آن باشد به پیوندها دست می‌زنیم.
+   *
+   * نتیجه: فرم‌های کوچکِ دیگر (ویرایش سریع موجودی، فعال/غیرفعال) که این
+   * فیلد را ندارند، هرگز سازگاری خودروی محصول را پاک نمی‌کنند.
+   * -------------------------------------------------------------------- */
+  function vehicleSelectionSubmitted(body = {}) {
+    return vehicles !== null && String(body?.vehiclesSubmitted ?? '') === '1';
+  }
+
+  /**
+   * شناسه‌های خودروی فرستاده‌شده که دیگر وجود ندارند.
+   *
+   * حالتِ واقعی: مدیر فرم را باز گذاشته، مدیر دیگری خودرویی را که به هیچ
+   * محصولی وصل نبود حذف کرده، و اکنون فرم کهنه فرستاده می‌شود.
+   *
+   * بی‌صدا انداختنِ آن شناسه درست نیست — مدیر آن گزینه را *خودش* انتخاب
+   * کرده و باید بداند چه شد.
+   */
+  async function missingVehicleIds(req) {
+    if (!vehicleSelectionSubmitted(req.body)) return [];
+    const ids = parseVehicleSelection(req.body?.vehicles);
+    if (!ids.length) return [];
+    const present = new Set(await vehicles.existingIds(ids));
+    return ids.filter((id) => !present.has(id));
+  }
+
+  /**
+   * اگر انتخاب خودرو کهنه است، خطا را به همان شکل خطای فیلد اضافه می‌کند
+   * تا فرم دوباره نشان داده شود — نه صفحهٔ «خطای سرور».
+   *
+   * *پیش از* نوشتن محصول صدا زده می‌شود. دلیلش داده است نه زیبایی: در
+   * مسیر ساخت، اگر کلید خارجی بعد از INSERT می‌شکست، محصولی نیمه‌ساخته
+   * بی‌سازگاری باقی می‌ماند. با بررسی قبلی، هیچ ردیفی نوشته نمی‌شود.
+   *
+   * @returns {Promise<boolean>} true اگر خطایی اضافه شد
+   */
+  async function addStaleVehicleError(req, errors) {
+    const missing = await missingVehicleIds(req);
+    if (!missing.length) return false;
+    const list = missing.map((id) => faDigits(id)).join('، ');
+    errors.vehicles = `خودروی انتخاب‌شده با این شناسه دیگر وجود ندارد: ${list}. `
+      + 'احتمالا همین حالا حذف شده است. فهرست خودروها را تازه کنید و انتخاب را '
+      + 'اصلاح کنید. هیچ چیزی ذخیره نشد.';
+    return true;
+  }
+
+  async function applyVehicleSelection(req, productId) {
+    if (!vehicleSelectionSubmitted(req.body)) return false;
+    const ids = parseVehicleSelection(req.body?.vehicles);
+    await products.setVehicles(productId, ids);
+    await record(req, AUDIT_ACTIONS.PRODUCT_VEHICLES_CHANGED, 'product', productId, ['vehicles']);
+    return true;
+  }
+
   async function productIndex(req, res, next) {
     try {
-      const { q, category, brand, active, page } = parseProductListQuery(req.query);
+      const { q, category, brand, active, sort, page } = parseProductListQuery(req.query);
       const result = await products.adminList({
         filters: {
           term: q || null,
@@ -152,6 +218,7 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
           brandId: brand,
           isActive: active === null ? undefined : active,
         },
+        sort,
         page,
         perPage: PER_PAGE,
       });
@@ -161,6 +228,7 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
         category,
         brand,
         active: active === null ? '' : (active ? 'yes' : 'no'),
+        sort,
       };
 
       res.render('pages/admin/products/index', {
@@ -171,6 +239,7 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
         queryString: buildAdminQuery({ ...query, page }),
         pagination: paginate(result, `${BASE}/products`, query),
         availabilityLabels: AVAILABILITY_LABELS,
+        sortLabels: SORT_LABELS,
         ...selects,
         flash: readFlash(req),
       });
@@ -186,17 +255,27 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
   async function productCreate(req, res, next) {
     try {
       const { values, errors, warnings } = parseProductForm(req.body);
+      /* پیش از ساختن محصول، نه بعد از آن — وگرنه محصول ساخته می‌شد و
+         بعد پیوند می‌شکست. */
+      await addStaleVehicleError(req, errors);
       if (Object.keys(errors).length) {
-        return renderProductForm(res, { status: 422, mode: 'new', values: productBodyToForm(req.body), errors, warnings });
+        return renderProductForm(res, {
+          status: 422, mode: 'new', values: productBodyToForm(req.body), errors, warnings,
+          selectedVehicleIds: parseVehicleSelection(req.body?.vehicles),
+        });
       }
       let id;
       try {
         id = await products.create(values);
       } catch (err) {
         if (!asFieldError(err, errors)) return next(err);
-        return renderProductForm(res, { status: 422, mode: 'new', values: productBodyToForm(req.body), errors, warnings });
+        return renderProductForm(res, {
+          status: 422, mode: 'new', values: productBodyToForm(req.body), errors, warnings,
+          selectedVehicleIds: parseVehicleSelection(req.body?.vehicles),
+        });
       }
       await record(req, AUDIT_ACTIONS.PRODUCT_CREATED, 'product', id, Object.keys(PRODUCT_COLUMN_MAP));
+      await applyVehicleSelection(req, id);
       res.redirect(303, `${BASE}/products/${id}/edit?flash=created`);
     } catch (err) { next(err); }
   }
@@ -206,6 +285,7 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
       const row = await products.findById(req.params.id);
       if (!row) return res.redirect(303, `${BASE}/products?error=not_found`);
       const selects = await productSelects();
+      const selectedVehicleIds = vehicles ? await products.vehicleIdsFor(row.id) : [];
       res.status(200).render('pages/admin/products/form', {
         title: 'ویرایش محصول',
         mode: 'edit',
@@ -215,6 +295,7 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
         product: row,
         availabilityValues: AVAILABILITY_VALUES,
         availabilityLabels: AVAILABILITY_LABELS,
+        selectedVehicleIds,
         ...selects,
         flash: readFlash(req),
       });
@@ -229,7 +310,11 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
       const { values, errors, warnings } = parseProductForm(req.body);
       const reshow = () => renderProductForm(res, {
         status: 422, mode: 'edit', values: productBodyToForm(req.body), errors, warnings, product: previous,
+        selectedVehicleIds: parseVehicleSelection(req.body?.vehicles),
       });
+      /* پیش از به‌روزرسانی محصول: انتخاب کهنه نباید محصول را نیم‌بند
+         عوض کند و بعد سر جایگزینی پیوندها بشکند. */
+      await addStaleVehicleError(req, errors);
       if (Object.keys(errors).length) return reshow();
 
       const changed = changedFields(previous, values, PRODUCT_COLUMN_MAP);
@@ -240,6 +325,7 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
         return reshow();
       }
       await record(req, AUDIT_ACTIONS.PRODUCT_UPDATED, 'product', previous.id, changed);
+      await applyVehicleSelection(req, previous.id);
       res.redirect(303, `${BASE}/products/${previous.id}/edit?flash=updated`);
     } catch (err) { next(err); }
   }
@@ -349,8 +435,12 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
 
   /** پارامترهای فهرست که فرم‌های کوچک با خود حمل می‌کنند. */
   function listQueryFromBody(body = {}) {
-    const { q, category, brand, active, page } = parseProductListQuery(body);
-    return { q, category, brand, active: active === null ? '' : (active ? 'yes' : 'no'), page };
+    const { q, category, brand, active, sort, page } = parseProductListQuery(body);
+    return {
+      q, category, brand, sort,
+      active: active === null ? '' : (active ? 'yes' : 'no'),
+      page,
+    };
   }
 
   /* ==================================================== دسته‌ها ======== */
@@ -610,6 +700,130 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
     } catch (err) { next(err); }
   }
 
+  /* ==================================================== خودروها ======= */
+
+  async function vehicleIndex(req, res, next) {
+    try {
+      res.render('pages/admin/vehicles/index', {
+        title: 'خودروها',
+        items: await vehicles.adminList(),
+        flash: readFlash(req),
+      });
+    } catch (err) { next(err); }
+  }
+
+  const vehicleToForm = (row) => ({
+    make: row.make, model: row.model,
+    generation: row.generation ?? '',
+    yearFrom: row.year_from ?? '', yearTo: row.year_to ?? '',
+    engineCode: row.engine_code ?? '', engineLabel: row.engine_label ?? '',
+    slug: row.slug, displayName: row.display_name,
+    sortOrder: row.sort_order, isActive: row.is_active,
+  });
+
+  function renderVehicleForm(res, { status = 200, mode, values, errors = {}, vehicle = null, flash = null }) {
+    return res.status(status).render('pages/admin/vehicles/form', {
+      title: mode === 'new' ? 'خودروی تازه' : 'ویرایش خودرو',
+      mode, values, errors, vehicle, flash,
+    });
+  }
+
+  async function vehicleNew(req, res, next) {
+    try {
+      renderVehicleForm(res, {
+        mode: 'new',
+        values: {
+          make: '', model: '', generation: '', yearFrom: '', yearTo: '',
+          engineCode: '', engineLabel: '', slug: '', displayName: '',
+          sortOrder: 0, isActive: true,
+        },
+      });
+    } catch (err) { next(err); }
+  }
+
+  async function vehicleCreate(req, res, next) {
+    try {
+      const { values, errors } = parseVehicleForm(req.body);
+      if (Object.keys(errors).length) {
+        return renderVehicleForm(res, { status: 422, mode: 'new', values: req.body, errors });
+      }
+      let id;
+      try {
+        id = await vehicles.create(values);
+      } catch (err) {
+        if (!asFieldError(err, errors)) return next(err);
+        return renderVehicleForm(res, { status: 422, mode: 'new', values: req.body, errors });
+      }
+      await record(req, AUDIT_ACTIONS.VEHICLE_CREATED, 'vehicle', id, Object.keys(VEHICLE_COLUMN_MAP));
+      res.redirect(303, `${BASE}/vehicles?flash=created`);
+    } catch (err) { next(err); }
+  }
+
+  async function vehicleEdit(req, res, next) {
+    try {
+      const row = await vehicles.findById(req.params.id);
+      if (!row) return res.redirect(303, `${BASE}/vehicles?error=not_found`);
+      renderVehicleForm(res, {
+        mode: 'edit', values: vehicleToForm(row), vehicle: row, flash: readFlash(req),
+      });
+    } catch (err) { next(err); }
+  }
+
+  async function vehicleUpdate(req, res, next) {
+    try {
+      const previous = await vehicles.findById(req.params.id);
+      if (!previous) return res.redirect(303, `${BASE}/vehicles?error=not_found`);
+
+      const { values, errors } = parseVehicleForm(req.body);
+      const reshow = () => renderVehicleForm(res, {
+        status: 422, mode: 'edit', values: req.body, errors, vehicle: previous,
+      });
+      if (Object.keys(errors).length) return reshow();
+
+      const changed = changedFields(previous, values, VEHICLE_COLUMN_MAP);
+      try {
+        await vehicles.update(previous.id, values);
+      } catch (err) {
+        if (!asFieldError(err, errors)) return next(err);
+        return reshow();
+      }
+      await record(req, AUDIT_ACTIONS.VEHICLE_UPDATED, 'vehicle', previous.id, changed);
+      res.redirect(303, `${BASE}/vehicles?flash=updated`);
+    } catch (err) { next(err); }
+  }
+
+  async function vehicleSetActive(req, res, next) {
+    try {
+      const wanted = String(req.body?.isActive) === 'yes';
+      const row = await vehicles.setActive(req.params.id, wanted);
+      if (!row) return res.redirect(303, `${BASE}/vehicles?error=not_found`);
+      await record(req, AUDIT_ACTIONS.VEHICLE_ACTIVE_CHANGED, 'vehicle', row.id, ['isActive']);
+      res.redirect(303, `${BASE}/vehicles?flash=${row.is_active ? 'activated' : 'deactivated'}`);
+    } catch (err) { next(err); }
+  }
+
+  async function vehicleDelete(req, res, next) {
+    try {
+      const row = await vehicles.findById(req.params.id);
+      if (!row) return res.redirect(303, `${BASE}/vehicles?error=not_found`);
+      if (String(req.body?.confirm) !== 'yes') {
+        return renderVehicleForm(res, {
+          status: 422, mode: 'edit', values: vehicleToForm(row), vehicle: row,
+          errors: { _delete: 'برای حذف دائمی باید کادر تأیید را علامت بزنید.' },
+        });
+      }
+      try {
+        await vehicles.remove(row.id);
+      } catch (err) {
+        const code = deleteErrorCode(err);
+        if (!code) return next(err);
+        return res.redirect(303, `${BASE}/vehicles?error=${code}`);
+      }
+      await record(req, AUDIT_ACTIONS.VEHICLE_DELETED, 'vehicle', row.id, ['id']);
+      res.redirect(303, `${BASE}/vehicles?flash=deleted`);
+    } catch (err) { next(err); }
+  }
+
   return {
     productIndex, productNew, productCreate, productEdit, productUpdate,
     productSetActive, productStock, productDelete,
@@ -617,5 +831,7 @@ export function createAdminCatalogController({ repositories, audit, storage = nu
     categorySetActive, categoryDelete,
     brandIndex, brandNew, brandCreate, brandEdit, brandUpdate,
     brandSetActive, brandDelete,
+    vehicleIndex, vehicleNew, vehicleCreate, vehicleEdit, vehicleUpdate,
+    vehicleSetActive, vehicleDelete,
   };
 }

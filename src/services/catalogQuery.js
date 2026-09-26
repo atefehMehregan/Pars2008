@@ -44,15 +44,16 @@ export function parseSearchTerm(raw) {
  * @returns {{page:number, sort:string, availability:string|undefined, brandSlug:string|undefined}}
  */
 export function parseListingQuery(query = {}) {
-  const brandSlug = typeof query.brand === 'string' && query.brand.length <= 200
-    ? query.brand.trim() || undefined
-    : undefined;
+  const slugParam = (value) => (typeof value === 'string' && value.length <= 200
+    ? value.trim() || undefined
+    : undefined);
 
   return {
     page: parsePage(query.page),
     sort: parseSort(query.sort),
     availability: parseAvailability(query.availability),
-    brandSlug,
+    brandSlug: slugParam(query.brand),
+    vehicleSlug: slugParam(query.vehicle),
   };
 }
 
@@ -61,10 +62,13 @@ export function parseListingQuery(query = {}) {
  * مرتب‌سازی. فقط کلیدهای شناخته‌شده نوشته می‌شوند، پس پارامتر ناخواسته‌ای
  * از نشانی ورودی به نشانی خروجی منتقل نمی‌شود.
  */
-export function buildQueryString({ page, sort, availability, brand, q } = {}) {
+export function buildQueryString({ page, sort, availability, brand, vehicle, q } = {}) {
   const params = new URLSearchParams();
   if (q) params.set('q', q);
   if (brand) params.set('brand', brand);
+  /* اگر این یکی جا می‌افتاد، صفحه‌بندی و مرتب‌سازی بی‌سروصدا پالایهٔ
+     خودرو را دور می‌انداختند. */
+  if (vehicle) params.set('vehicle', vehicle);
   if (availability) params.set('availability', availability);
   if (sort && sort !== DEFAULT_SORT) params.set('sort', sort);
   if (page && page > 1) params.set('page', String(page));

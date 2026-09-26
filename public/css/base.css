@@ -1160,6 +1160,9 @@ a:hover { color: var(--c-brand-strong); }
 .field--invalid .field__input { border-color: #c98a7c; }
 .field__input--area { resize: vertical; line-height: 1.7; }
 
+/* انتخاب چندگزینه‌ای — ارتفاع ثابت تا فهرست بلند، فرم را نکشد. */
+.field__input--multi { min-height: 8.5rem; padding: 0.35rem; line-height: 1.9; }
+
 .field--check { flex-direction: column; }
 .check { display: flex; align-items: center; gap: 0.45rem; font-size: 0.9rem; cursor: pointer; }
 .check input { width: 1rem; height: 1rem; }

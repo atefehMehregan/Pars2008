@@ -1,0 +1,80 @@
+{% extends "layouts/admin.njk" %}
+
+{% block content %}
+<section class="admin-section">
+  <div class="admin-headline">
+    <h1 class="admin-title">خودروها</h1>
+    <a class="btn btn--primary" href="/admin/catalogue/vehicles/new">خودروی تازه</a>
+  </div>
+
+  <nav class="admin-subnav" aria-label="بخش‌های کاتالوگ">
+    <a class="admin-subnav__link" href="/admin/catalogue/products">محصول‌ها</a>
+    <a class="admin-subnav__link" href="/admin/catalogue/categories">دسته‌ها</a>
+    <a class="admin-subnav__link" href="/admin/catalogue/brands">برندها</a>
+    <a class="admin-subnav__link is-current" href="/admin/catalogue/vehicles">خودروها</a>
+  </nav>
+
+  {% include "partials/admin-flash.njk" %}
+
+  <div class="admin-panel">
+    <h2 class="admin-panel__title">{{ items.length | faDigits }} خودرو</h2>
+
+    {% if items.length %}
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>نام نمایشی</th><th>سازنده / مدل</th><th>نسل</th><th>سال</th>
+              <th>موتور</th><th>ترتیب</th><th>محصول</th><th>انتشار</th>
+              <th><span class="sr-only">کارها</span></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for v in items %}
+              <tr class="{% if not v.is_active %}is-inactive{% endif %}">
+                <td><a class="admin-table__name" href="/admin/catalogue/vehicles/{{ v.id }}/edit">{{ v.display_name }}</a></td>
+                <td>{{ v.make }} / {{ v.model }}</td>
+                <td>{{ v.generation or '—' }}</td>
+                <td>
+                  {% if v.year_from or v.year_to %}
+                    <span class="num">{{ (v.year_from or '?') | faDigits }}</span>–<span class="num">{{ (v.year_to or '?') | faDigits }}</span>
+                  {% else %}—{% endif %}
+                </td>
+                <td>
+                  {% if v.engine_label or v.engine_code %}
+                    {{ v.engine_label or '' }}
+                    {% if v.engine_code %}<bdi class="part-number">{{ v.engine_code }}</bdi>{% endif %}
+                  {% else %}—{% endif %}
+                </td>
+                <td>{{ v.sort_order | faDigits }}</td>
+                <td>{{ v.product_count | faDigits }}</td>
+                <td>
+                  {% if v.is_active %}<span class="pill pill--on">فعال</span>
+                  {% else %}<span class="pill pill--off">غیرفعال</span>{% endif %}
+                </td>
+                <td class="admin-table__actions">
+                  <a class="btn btn--quiet" href="/admin/catalogue/vehicles/{{ v.id }}/edit">ویرایش</a>
+                  <form class="inline-form" action="/admin/catalogue/vehicles/{{ v.id }}/active" method="post">
+                    <input type="hidden" name="_csrf" value="{{ adminCsrfToken }}" />
+                    <input type="hidden" name="isActive" value="{{ 'no' if v.is_active else 'yes' }}" />
+                    <button class="btn {{ 'btn--warn' if v.is_active else 'btn--primary' }}" type="submit">
+                      {{ 'غیرفعال کردن' if v.is_active else 'فعال کردن' }}
+                    </button>
+                  </form>
+                  <a class="link-danger" href="/admin/catalogue/vehicles/{{ v.id }}/edit#delete">حذف…</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="admin-panel__empty">
+        هنوز خودرویی ثبت نشده است.
+        <a href="/admin/catalogue/vehicles/new">اولین خودرو را بسازید</a>.
+        تا وقتی خودرویی نباشد، سازگاری قطعه‌ها را نمی‌شود ثبت کرد.
+      </p>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}

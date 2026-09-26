@@ -17,17 +17,18 @@ import { normalizeSlugParam } from '../services/slug.js';
 import { parseListingQuery, parseSearchTerm, parsePage, PER_PAGE } from '../services/catalogQuery.js';
 import { buildPagination } from '../services/pagination.js';
 
-export function createCatalogController({ products, categories, brands }) {
+export function createCatalogController({ products, categories, brands, vehicles = null }) {
   /**
    * مدل مشترک همهٔ صفحه‌های فهرست.
    * دسته‌ها و برندها برای نوار کناری لازم‌اند و در هر سه صفحه یکی هستند.
    */
   async function listingChrome() {
-    const [categoryList, brandList] = await Promise.all([
+    const [categoryList, brandList, vehicleList] = await Promise.all([
       categories.listWithCounts(),
       brands.listWithCounts(),
+      vehicles ? vehicles.listWithCounts() : Promise.resolve([]),
     ]);
-    return { categoryList, brandList };
+    return { categoryList, brandList, vehicleList };
   }
 
   /** حل نشانی برند به شناسه، برای فیلتر. */
@@ -37,14 +38,26 @@ export function createCatalogController({ products, categories, brands }) {
     return { brandId: brand?.id, brand };
   }
 
+  /**
+   * حل نشانی خودرو به شناسه.
+   * نشانی ناشناس یعنی «بدون فیلتر»، نه ۴۰۴: پالایهٔ نامعتبر نباید صفحهٔ
+   * سالم را بشکند — همان رفتاری که availability و sort دارند.
+   */
+  async function resolveVehicleFilter(vehicleSlug) {
+    if (!vehicleSlug || !vehicles) return { vehicleId: undefined, vehicle: null };
+    const vehicle = await vehicles.findBySlug(normalizeSlugParam(vehicleSlug));
+    return { vehicleId: vehicle?.id, vehicle };
+  }
+
   /* ------------------------------------------------- GET /products */
 
   async function shop(req, res) {
     const q = parseListingQuery(req.query);
     const { brandId, brand } = await resolveBrandFilter(q.brandSlug);
+    const { vehicleId, vehicle } = await resolveVehicleFilter(q.vehicleSlug);
 
     const result = await products.list({
-      filters: { brandId, availability: q.availability },
+      filters: { brandId, vehicleId, availability: q.availability },
       sort: q.sort,
       page: q.page,
       perPage: PER_PAGE,
@@ -57,12 +70,13 @@ export function createCatalogController({ products, categories, brands }) {
       ...chrome,
       result,
       activeBrand: brand,
+      activeVehicle: vehicle,
       query: q,
       pagination: buildPagination(result, '/products', {
-        sort: q.sort, availability: q.availability, brand: q.brandSlug,
+        sort: q.sort, availability: q.availability, brand: q.brandSlug, vehicle: q.vehicleSlug,
       }),
       /* کاتالوگ اصلا خالی است، یا فقط این فیلتر نتیجه ندارد؟ */
-      catalogueEmpty: result.total === 0 && !brandId && !q.availability,
+      catalogueEmpty: result.total === 0 && !brandId && !vehicleId && !q.availability,
     });
   }
 
@@ -75,9 +89,10 @@ export function createCatalogController({ products, categories, brands }) {
 
     const q = parseListingQuery(req.query);
     const { brandId, brand } = await resolveBrandFilter(q.brandSlug);
+    const { vehicleId, vehicle } = await resolveVehicleFilter(q.vehicleSlug);
 
     const result = await products.list({
-      filters: { categoryId: cat.id, brandId, availability: q.availability },
+      filters: { categoryId: cat.id, brandId, vehicleId, availability: q.availability },
       sort: q.sort,
       page: q.page,
       perPage: PER_PAGE,
@@ -91,9 +106,10 @@ export function createCatalogController({ products, categories, brands }) {
       ...chrome,
       result,
       activeBrand: brand,
+      activeVehicle: vehicle,
       query: q,
       pagination: buildPagination(result, `/category/${encodeURIComponent(cat.slug)}`, {
-        sort: q.sort, availability: q.availability, brand: q.brandSlug,
+        sort: q.sort, availability: q.availability, brand: q.brandSlug, vehicle: q.vehicleSlug,
       }),
       catalogueEmpty: false,
     });
@@ -107,8 +123,9 @@ export function createCatalogController({ products, categories, brands }) {
     if (!found) return notFound(req, res);
 
     const q = parseListingQuery(req.query);
+    const { vehicleId, vehicle } = await resolveVehicleFilter(q.vehicleSlug);
     const result = await products.list({
-      filters: { brandId: found.id, availability: q.availability },
+      filters: { brandId: found.id, vehicleId, availability: q.availability },
       sort: q.sort,
       page: q.page,
       perPage: PER_PAGE,
@@ -121,9 +138,10 @@ export function createCatalogController({ products, categories, brands }) {
       ...chrome,
       result,
       activeBrand: found,
+      activeVehicle: vehicle,
       query: q,
       pagination: buildPagination(result, `/brand/${encodeURIComponent(found.slug)}`, {
-        sort: q.sort, availability: q.availability,
+        sort: q.sort, availability: q.availability, vehicle: q.vehicleSlug,
       }),
       catalogueEmpty: false,
     });

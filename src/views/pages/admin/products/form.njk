@@ -78,6 +78,48 @@
     </div>
 
     <div class="admin-panel">
+      <h2 class="admin-panel__title">سازگاری خودرو</h2>
+      {# فیلد پنهانِ نگهبان: مرورگر برای select چندگزینه‌ایِ خالی هیچ چیز
+         نمی‌فرستد، که از «همه را بردار» قابل تشخیص نیست. سرور فقط وقتی
+         به پیوندها دست می‌زند که این فیلد آمده باشد — پس فرم‌های کوچکِ
+         دیگر (موجودی، فعال/غیرفعال) هرگز سازگاری را پاک نمی‌کنند. #}
+      <input type="hidden" name="vehiclesSubmitted" value="1" />
+
+      {# خطای «خودروی ناموجود» بیرون از شرط زیر است: اگر تنها خودروی موجود
+         همین حالا حذف شده باشد، فهرست گزینه‌ها خالی است و پیام باید باز
+         هم دیده شود. #}
+      {% if errors.vehicles %}
+        <p class="field__error" id="e-vehicles" role="alert">{{ errors.vehicles }}</p>
+      {% endif %}
+
+      {% if vehicleOptions.length %}
+        <div class="field{% if errors.vehicles %} field--invalid{% endif %}">
+          <label class="field__label" for="f-vehicles">خودروهای سازگار</label>
+          <select class="field__input field__input--multi" id="f-vehicles" name="vehicles"
+                  multiple size="6"
+                  {% if errors.vehicles %}aria-invalid="true" aria-describedby="e-vehicles"{% endif %}>
+            {% for v in vehicleOptions %}
+              <option value="{{ v.id }}"
+                {% if v.id in selectedVehicleIds %}selected{% endif %}>
+                {{ v.display_name }}{% if not v.is_active %} (غیرفعال){% endif %}
+              </option>
+            {% endfor %}
+          </select>
+          <p class="field__hint">
+            برای انتخاب چند خودرو، کلید Ctrl (یا Command) را نگه دارید.
+            اگر هیچ‌کدام انتخاب نشود، همهٔ سازگاری‌های این محصول برداشته می‌شود.
+          </p>
+        </div>
+      {% else %}
+        <p class="admin-panel__empty">
+          هنوز خودرویی ثبت نشده است.
+          <a href="/admin/catalogue/vehicles/new">اول یک خودرو بسازید</a>،
+          بعد می‌توانید سازگاری این قطعه را مشخص کنید.
+        </p>
+      {% endif %}
+    </div>
+
+    <div class="admin-panel">
       <h2 class="admin-panel__title">قیمت و موجودی</h2>
       <div class="form-grid">
         {{ f.text('priceToman', 'قیمت (تومان)', values.priceToman, errors, 'text', true,

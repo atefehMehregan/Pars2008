@@ -11,13 +11,15 @@ import { createCategoryRepository } from './categories.js';
 import { createBrandRepository } from './brands.js';
 import { createProductRepository } from './products.js';
 import { createProductImageRepository } from './productImages.js';
+import { createVehicleRepository } from './vehicles.js';
 
 export const categories = createCategoryRepository(db);
 export const brands = createBrandRepository(db);
 export const products = createProductRepository(db);
 export const productImages = createProductImageRepository(db);
+export const vehicles = createVehicleRepository(db);
 
 export {
   createCategoryRepository, createBrandRepository,
-  createProductRepository, createProductImageRepository,
+  createProductRepository, createProductImageRepository, createVehicleRepository,
 };

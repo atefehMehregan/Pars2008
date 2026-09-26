@@ -42,6 +42,14 @@ export const AUDIT_ACTIONS = {
   BRAND_UPDATED: 'catalog.brand.updated',
   BRAND_DELETED: 'catalog.brand.deleted',
   BRAND_ACTIVE_CHANGED: 'catalog.brand.active',
+
+  /* خودرو — فاز ۶. سازگاری محصول با خودرو جداگانه ثبت می‌شود چون
+     تغییرش روی آنچه مشتری می‌بیند اثر مستقیم دارد. */
+  VEHICLE_CREATED: 'catalog.vehicle.created',
+  VEHICLE_UPDATED: 'catalog.vehicle.updated',
+  VEHICLE_DELETED: 'catalog.vehicle.deleted',
+  VEHICLE_ACTIVE_CHANGED: 'catalog.vehicle.active',
+  PRODUCT_VEHICLES_CHANGED: 'catalog.product.vehicles',
 };
 
 export function createAuditLog(db) {

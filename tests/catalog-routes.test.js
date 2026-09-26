@@ -15,6 +15,7 @@ import {
 import { createProductRepository } from '../src/db/repositories/products.js';
 import { createCategoryRepository } from '../src/db/repositories/categories.js';
 import { createBrandRepository } from '../src/db/repositories/brands.js';
+import { createVehicleRepository } from '../src/db/repositories/vehicles.js';
 
 process.env.NODE_ENV = 'test';
 
@@ -28,6 +29,7 @@ before(async () => {
       products: createProductRepository(db),
       categories: createCategoryRepository(db),
       brands: createBrandRepository(db),
+      vehicles: createVehicleRepository(db),
     },
   });
   server = app.listen(0);
@@ -364,4 +366,61 @@ test('فرم جست‌وجو در هدر همهٔ صفحه‌ها هست', async
   const html = await text('/products');
   assert.match(html, /action="\/search"/);
   assert.match(html, /name="q"/);
+});
+
+/* ------------------------------------------ پالایهٔ خودرو (فاز ۶) */
+
+test('پالایهٔ خودرو فقط محصول‌های سازگار را نشان می‌دهد', async () => {
+  const { createProductRepository: mkProducts } = await import('../src/db/repositories/products.js');
+  const products = mkProducts(db);
+  const catId = await insertCategory(db);
+  const fit = await insertProduct(db, { categoryId: catId, name: 'قطعهٔ سازگار', slug: 'fit', sku: 'F1' });
+  await insertProduct(db, { categoryId: catId, name: 'قطعهٔ ناسازگار', slug: 'unfit', sku: 'U1' });
+  const vid = await insertVehicle(db, { slug: 'خودرو-پالایه', displayName: 'خودروی پالایه' });
+  await products.setVehicles(fit, [vid]);
+
+  const html = await text('/products?vehicle=' + encodeURIComponent('خودرو-پالایه'));
+  assert.match(html, /قطعهٔ سازگار/);
+  assert.ok(!html.includes('قطعهٔ ناسازگار'), 'محصول ناسازگار نباید بیاید');
+});
+
+test('نشانی خودروی ناشناس پالایه را نادیده می‌گیرد، نه ۴۰۴', async () => {
+  const catId = await insertCategory(db);
+  await insertProduct(db, { categoryId: catId, name: 'قطعهٔ آزاد', slug: 'free', sku: 'X1' });
+
+  const res = await get('/products?vehicle=' + encodeURIComponent('خودروی-ناموجود'));
+  assert.equal(res.status, 200);
+  assert.match(await res.text(), /قطعهٔ آزاد/);
+});
+
+test('نوار کناری خودروها را با شمار محصول نشان می‌دهد', async () => {
+  const { createProductRepository: mkProducts } = await import('../src/db/repositories/products.js');
+  const products = mkProducts(db);
+  const catId = await insertCategory(db);
+  const pid = await insertProduct(db, { categoryId: catId, slug: 'p1', sku: 'S1' });
+  const vid = await insertVehicle(db, { slug: 'خودرو-کناری', displayName: 'خودروی کناری' });
+  await products.setVehicles(pid, [vid]);
+
+  const html = await text('/products');
+  assert.match(html, /سازگار با خودرو/);
+  assert.match(html, /خودروی کناری/);
+});
+
+test('بدون خودرو، بخش سازگاری در نوار کناری نمی‌آید', async () => {
+  const html = await text('/products');
+  assert.ok(!html.includes('سازگار با خودرو'), 'بخش خالی نمایش داده نمی‌شود');
+});
+
+test('پالایهٔ خودرو در پیوندهای صفحه‌بندی حفظ می‌شود', async () => {
+  const { createProductRepository: mkProducts } = await import('../src/db/repositories/products.js');
+  const products = mkProducts(db);
+  const catId = await insertCategory(db);
+  const vid = await insertVehicle(db, { slug: 'خودرو-صفحه', displayName: 'خودروی صفحه' });
+  for (let i = 1; i <= 15; i += 1) {
+    const pid = await insertProduct(db, { categoryId: catId, name: `قطعه ${i}`, slug: `pv${i}`, sku: `PV${i}` });
+    await products.setVehicles(pid, [vid]);
+  }
+  const html = await text('/products?vehicle=' + encodeURIComponent('خودرو-صفحه'));
+  assert.match(html, /class="pagination"/);
+  assert.match(html, /vehicle=/, 'پیوند صفحهٔ بعد باید پالایه را نگه دارد');
 });

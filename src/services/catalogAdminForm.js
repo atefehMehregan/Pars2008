@@ -13,10 +13,21 @@
  * ==========================================================================*/
 import {
   requiredText, optionalText, integer, money, idRef, checkbox, oneOf,
-  slugField, salePriceRule, specsField, stockWarning, createFieldErrors, LIMITS,
+  slugField, salePriceRule, yearRangeRule, specsField, stockWarning,
+  cleanNumeric, createFieldErrors, LIMITS,
 } from './validate.js';
 
+import { SORT_KEYS, DEFAULT_SORT } from '../db/repositories/products.js';
+
 export const AVAILABILITY_VALUES = ['in_stock', 'out_of_stock', 'on_order', 'discontinued'];
+
+/* برچسب فارسی ترتیب‌ها — همان کلیدهای مخزن، یک جا برای فرم مدیر. */
+export const SORT_LABELS = {
+  newest: 'تازه‌ترین',
+  'price-asc': 'ارزان‌ترین',
+  'price-desc': 'گران‌ترین',
+  name: 'بر اساس نام',
+};
 
 /** برچسب فارسی وضعیت‌ها — یک جا، تا فهرست و فرم یکی بگویند. */
 export const AVAILABILITY_LABELS = {
@@ -123,6 +134,75 @@ export function parseBrandForm(body = {}) {
   return { values: { name, slug, country, isActive }, errors: f.errors, warnings: [] };
 }
 
+/* ------------------------------------------------------------ خودرو ---- */
+
+/**
+ * فرم خودرو → دادهٔ آمادهٔ مخزن.
+ *
+ * ستون‌های توصیفی (نسل، کد موتور، بازهٔ سال) اختیاری‌اند و اینجا هیچ
+ * مقدار پیش‌فرضی برایشان ساخته نمی‌شود: دادهٔ کسب‌وکار است و فقط از
+ * مدیر می‌آید.
+ *
+ * @returns {{values:object, errors:object, warnings:string[]}}
+ */
+export function parseVehicleForm(body = {}) {
+  const f = createFieldErrors();
+
+  const make = f.take('make', requiredText(body.make, { label: 'سازنده', min: 2, max: 80 }));
+  const model = f.take('model', requiredText(body.model, { label: 'مدل', min: 1, max: 80 }));
+  const displayName = f.take('displayName',
+    requiredText(body.displayName, { label: 'نام نمایشی', min: 2, max: 160 }));
+  /* نشانی از نام نمایشی ساخته می‌شود، چون همان چیزی است که مشتری می‌بیند. */
+  const slug = f.take('slug', slugField(body.slug, displayName, { label: 'نشانی' }));
+
+  const generation = f.take('generation', optionalText(body.generation, { label: 'نسل', max: 80 }));
+  const engineCode = f.take('engineCode', optionalText(body.engineCode, { label: 'کد موتور', max: 40 }));
+  const engineLabel = f.take('engineLabel', optionalText(body.engineLabel, { label: 'عنوان موتور', max: 80 }));
+
+  const yearFrom = f.take('yearFrom', integer(body.yearFrom, {
+    label: 'از سال', required: false, min: LIMITS.YEAR_MIN, max: LIMITS.YEAR_MAX,
+  }));
+  const yearTo = f.take('yearTo', integer(body.yearTo, {
+    label: 'تا سال', required: false, min: LIMITS.YEAR_MIN, max: LIMITS.YEAR_MAX,
+  }));
+  /* قید vehicles_year_range همین را می‌گوید، ولی کاربر باید پیام روشن
+     ببیند نه خطای خام پایگاه داده. */
+  f.add('yearTo', yearRangeRule(yearFrom, yearTo));
+
+  const sortOrder = f.take('sortOrder', integer(body.sortOrder, {
+    label: 'ترتیب نمایش', required: false,
+    min: LIMITS.SORT_ORDER_MIN, max: LIMITS.SORT_ORDER_MAX,
+  }));
+  const isActive = checkbox(body.isActive);
+
+  return {
+    values: {
+      make, model, generation, yearFrom, yearTo, engineCode, engineLabel,
+      slug, displayName, sortOrder: sortOrder ?? 0, isActive,
+    },
+    errors: f.errors,
+    warnings: [],
+  };
+}
+
+/**
+ * شناسه‌های خودروی انتخاب‌شده در فرم محصول.
+ *
+ * مرورگر برای select چندگزینه‌ای یک مقدار یا آرایه می‌فرستد؛ هر دو
+ * پذیرفته می‌شوند. مقدار بی‌معنی بی‌صدا کنار گذاشته می‌شود — همان
+ * قاعدهٔ فهرست سفید در بقیهٔ پروژه.
+ */
+export function parseVehicleSelection(raw, { max = 200 } = {}) {
+  const list = Array.isArray(raw) ? raw : (raw === undefined || raw === null ? [] : [raw]);
+  const seen = new Set();
+  for (const value of list) {
+    const n = Number(cleanNumeric(value));
+    if (Number.isSafeInteger(n) && n > 0) seen.add(n);
+    if (seen.size >= max) break;
+  }
+  return [...seen];
+}
+
 /* ------------------------------------------- تشخیص فیلدهای تغییرکرده -- */
 
 /** نگاشت نام فیلد فرم به ستون پایگاه داده. برای رد پا لازم است. */
@@ -144,6 +224,14 @@ export const CATEGORY_COLUMN_MAP = {
 
 export const BRAND_COLUMN_MAP = {
   name: 'name', slug: 'slug', country: 'country', isActive: 'is_active',
+};
+
+export const VEHICLE_COLUMN_MAP = {
+  make: 'make', model: 'model', generation: 'generation',
+  yearFrom: 'year_from', yearTo: 'year_to',
+  engineCode: 'engine_code', engineLabel: 'engine_label',
+  slug: 'slug', displayName: 'display_name',
+  sortOrder: 'sort_order', isActive: 'is_active',
 };
 
 function sameValue(a, b) {
@@ -179,6 +267,7 @@ const CONSTRAINT_MESSAGES = {
   products_category_id_fkey: 'این دسته محصول دارد و حذف نمی‌شود. اول محصول‌ها را به دستهٔ دیگری ببرید یا حذف کنید.',
   products_brand_id_fkey: 'این برند محصول دارد و حذف نمی‌شود. اول محصول‌ها را به برند دیگری ببرید یا حذف کنید.',
   categories_parent_id_fkey: 'این دسته زیردسته دارد و حذف نمی‌شود. اول زیردسته‌ها را جابه‌جا یا حذف کنید.',
+  product_vehicle_vehicle_id_fkey: 'این خودرو به محصول‌هایی وصل است و حذف نمی‌شود. اول سازگاری آن محصول‌ها را بردارید، یا خودرو را غیرفعال کنید.',
 };
 
 const DUPLICATE_MESSAGES = {
@@ -240,12 +329,14 @@ export const DELETE_ERROR_CODES = {
   products_category_id_fkey: 'cat_has_products',
   categories_parent_id_fkey: 'cat_has_children',
   products_brand_id_fkey: 'brand_has_products',
+  product_vehicle_vehicle_id_fkey: 'vehicle_has_products',
 };
 
 export const FLASH_ERRORS = {
   cat_has_products: CONSTRAINT_MESSAGES.products_category_id_fkey,
   cat_has_children: CONSTRAINT_MESSAGES.categories_parent_id_fkey,
   brand_has_products: CONSTRAINT_MESSAGES.products_brand_id_fkey,
+  vehicle_has_products: CONSTRAINT_MESSAGES.product_vehicle_vehicle_id_fkey,
   blocked: 'این ردیف جای دیگری استفاده شده و حذف نمی‌شود.',
   not_found: 'ردیف مورد نظر پیدا نشد.',
   bad_stock: 'مقدار موجودی یا وضعیت معتبر نبود و چیزی ذخیره نشد.',
@@ -259,12 +350,14 @@ export const FLASH_ERRORS = {
  * سفیدِ خودش را دارد (sort/availability/brand/q) و پارامترهای مدیر
  * (category/active) را بی‌سروصدا می‌انداخت.
  */
-export function buildAdminQuery({ q, category, brand, active, page } = {}) {
+export function buildAdminQuery({ q, category, brand, active, sort, page } = {}) {
   const parts = [];
   if (q) parts.push(`q=${encodeURIComponent(q)}`);
   if (category) parts.push(`category=${encodeURIComponent(category)}`);
   if (brand) parts.push(`brand=${encodeURIComponent(brand)}`);
   if (active === 'yes' || active === 'no') parts.push(`active=${active}`);
+  /* ترتیب پیش‌فرض در نشانی نمی‌نشیند تا نشانی‌ها کوتاه بمانند. */
+  if (sort && sort !== DEFAULT_SORT) parts.push(`sort=${encodeURIComponent(sort)}`);
   if (page && Number(page) > 1) parts.push(`page=${encodeURIComponent(page)}`);
   return parts.length ? `?${parts.join('&')}` : '';
 }
@@ -275,6 +368,8 @@ export function parseProductListQuery(query = {}) {
   const category = Number(query.category) > 0 ? Number(query.category) : null;
   const brand = Number(query.brand) > 0 ? Number(query.brand) : null;
   const active = query.active === 'yes' ? true : (query.active === 'no' ? false : null);
+  /* کلید ترتیب از همان فهرست سفید مخزن می‌آید؛ ناشناخته → پیش‌فرض. */
+  const sort = SORT_KEYS.includes(query.sort) ? query.sort : DEFAULT_SORT;
   const page = Number(query.page) > 0 ? Math.trunc(Number(query.page)) : 1;
-  return { q, category, brand, active, page };
+  return { q, category, brand, active, sort, page };
 }

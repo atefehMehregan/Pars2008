@@ -41,4 +41,24 @@
       <p class="filter-group__empty">هنوز برندی ثبت نشده است.</p>
     {% endif %}
   </section>
+
+  {# خودروها فقط وقتی نشان داده می‌شوند که واقعا ثبت شده باشند — یک
+     بخش خالیِ «سازگاری» به مشتری چیزی نمی‌گوید. #}
+  {% if vehicleList and vehicleList.length %}
+    <section class="filter-group">
+      <h2 class="filter-group__title">سازگار با خودرو</h2>
+      <ul class="filter-list">
+        {% for v in vehicleList %}
+          <li>
+            <a class="{% if activeVehicle and activeVehicle.slug == v.slug %}is-current{% endif %}"
+               href="{{ currentPath }}?vehicle={{ v.slug | urlencode }}"
+               {% if activeVehicle and activeVehicle.slug == v.slug %}aria-current="page"{% endif %}>
+              <span>{{ v.display_name }}</span>
+              <span class="filter-list__count num">{{ v.product_count | faDigits }}</span>
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
+    </section>
+  {% endif %}
 </aside>
