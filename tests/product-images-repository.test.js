@@ -67,7 +67,7 @@ test('دو محصول می‌توانند هرکدام تصویر اصلی خو�
 
 /* ═════════════════════════════════════ ۲. تصویر اصلی */
 
-test('setPrimary در یک دستور جابه‌جا می‌شود و قید را نمی‌شکند', async () => {
+test('setPrimary جابه‌جا می‌کند و قید را نمی‌شکند', async () => {
   await repo.add({ productId, imageId: A, isPrimary: true });
   await repo.add({ productId, imageId: B });
   await repo.add({ productId, imageId: C });
@@ -78,6 +78,84 @@ test('setPrimary در یک دستور جابه‌جا می‌شود و قید ر
   const primary = rows.filter((r) => r.is_primary);
   assert.equal(primary.length, 1, 'دقیقا یکی');
   assert.equal(primary[0].image_id, B);
+});
+
+/* ---------------------------------------------------------------------
+ * آزمون بازگشتی برای باگ «اصلی کردنِ بار دوم».
+ *
+ * پیاده‌سازی قبلی با یک دستور کار می‌کرد و فقط *نخستین* جابه‌جایی روی
+ * ردیف‌های تازه‌درج‌شده را درست انجام می‌داد؛ جابه‌جایی دوم با خطای
+ * 23505 روی idx_product_images_one_primary می‌شکست و کاربر صفحهٔ ۵۰۰
+ * می‌دید.
+ *
+ * آزمون قبلی این را نمی‌گرفت چون فقط *یک* جابه‌جایی داشت — دقیقا همان
+ * حالتی که کار می‌کرد. این آزمون چند جابه‌جایی پشت سر هم می‌کند.
+ * ------------------------------------------------------------------ */
+test('جابه‌جایی‌های پیاپی تصویر اصلی: A → B → C → A', async () => {
+  await repo.add({ productId, imageId: A, isPrimary: true });
+  await repo.add({ productId, imageId: B });
+  await repo.add({ productId, imageId: C });
+
+  const expectOnly = async (expected, step) => {
+    const rows = await repo.listForProduct(productId);
+    const primary = rows.filter((r) => r.is_primary);
+    assert.equal(primary.length, 1, `${step}: باید دقیقا یک تصویر اصلی باشد`);
+    assert.equal(primary[0].image_id, expected, `${step}: تصویر اصلی باید ${expected} باشد`);
+    assert.equal(rows.length, 3, `${step}: هیچ ردیفی نباید گم شود`);
+  };
+
+  await expectOnly(A, 'وضعیت اولیه');
+
+  assert.equal(await repo.setPrimary(productId, B), true, 'جابه‌جایی ۱');
+  await expectOnly(B, 'پس از A → B');
+
+  /* اینجا بود که پیاده‌سازی قبلی می‌شکست. */
+  assert.equal(await repo.setPrimary(productId, C), true, 'جابه‌جایی ۲');
+  await expectOnly(C, 'پس از B → C');
+
+  assert.equal(await repo.setPrimary(productId, A), true, 'جابه‌جایی ۳ — بازگشت به اولی');
+  await expectOnly(A, 'پس از C → A');
+
+  /* و باز هم، تا مطمئن شویم به تعداد دفعات بستگی ندارد. */
+  assert.equal(await repo.setPrimary(productId, B), true, 'جابه‌جایی ۴');
+  await expectOnly(B, 'پس از A → B (دور دوم)');
+});
+
+test('اصلی کردنِ تصویری که از قبل اصلی است، بی‌خطر و بی‌اثر است', async () => {
+  await repo.add({ productId, imageId: A, isPrimary: true });
+  await repo.add({ productId, imageId: B });
+
+  for (let i = 0; i < 3; i += 1) {
+    assert.equal(await repo.setPrimary(productId, A), true, `تکرار ${i + 1}`);
+    const primary = (await repo.listForProduct(productId)).filter((r) => r.is_primary);
+    assert.equal(primary.length, 1);
+    assert.equal(primary[0].image_id, A);
+  }
+});
+
+test('جابه‌جایی با دو تصویر هم پیاپی کار می‌کند', async () => {
+  await repo.add({ productId, imageId: A, isPrimary: true });
+  await repo.add({ productId, imageId: B });
+
+  for (const target of [B, A, B, A]) {
+    assert.equal(await repo.setPrimary(productId, target), true);
+    const primary = (await repo.listForProduct(productId)).filter((r) => r.is_primary);
+    assert.equal(primary.length, 1);
+    assert.equal(primary[0].image_id, target);
+  }
+});
+
+test('جابه‌جایی در یک محصول، تصویر اصلیِ محصول دیگر را دست نمی‌زند', async () => {
+  await repo.add({ productId, imageId: A, isPrimary: true });
+  await repo.add({ productId, imageId: B });
+  await repo.add({ productId: otherProductId, imageId: C, isPrimary: true });
+
+  await repo.setPrimary(productId, B);
+  await repo.setPrimary(productId, A);
+
+  const other = await repo.listForProduct(otherProductId);
+  assert.equal(other.length, 1);
+  assert.equal(other[0].is_primary, true, 'محصول دیگر باید تصویر اصلی خودش را نگه دارد');
 });
 
 test('setPrimary برای شناسهٔ ناموجود false می‌دهد و چیزی را عوض نمی‌کند', async () => {

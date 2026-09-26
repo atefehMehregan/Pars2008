@@ -405,6 +405,34 @@ test('تغییر تصویر اصلی از راه مسیر، دقیقا یکی ر
   assert.equal(after.find((r) => r.is_primary).image_id, target.image_id);
 });
 
+/* آزمون بازگشتی در سطح HTTP برای همان باگی که در مرورگر دیده شد:
+   «اصلی کردن» بار اول کار می‌کرد و بار دوم صفحهٔ ۵۰۰ می‌داد. */
+test('اصلی کردنِ پیاپی از راه مسیر، بار دوم و سوم هم ۵۰۰ نمی‌دهد', async () => {
+  const jar = await login();
+  await upload(jar, productId, [
+    { buffer: await jpeg(800, 800) }, { buffer: await jpeg(810, 800) }, { buffer: await jpeg(820, 800) },
+  ]);
+  const ids = (await repo.listForProduct(productId))
+    .slice().sort((a, b) => a.sort_order - b.sort_order).map((r) => r.image_id);
+  assert.equal(ids.length, 3);
+
+  const csrf = await adminCsrf(jar, productId);
+  /* دور کامل: دومی، سومی، برگشت به اولی، و باز دومی. */
+  for (const [step, target] of [ids[1], ids[2], ids[0], ids[1]].entries()) {
+    const res = await post(jar,
+      `/admin/catalogue/products/${productId}/images/${target}/primary`, { _csrf: csrf });
+
+    assert.equal(res.status, 303, `گام ${step + 1}: نباید ۵۰۰ بدهد`);
+    assert.match(res.headers.get('location'), /flash=primary/, `گام ${step + 1}`);
+
+    const rows = await repo.listForProduct(productId);
+    const primary = rows.filter((r) => r.is_primary);
+    assert.equal(primary.length, 1, `گام ${step + 1}: دقیقا یک تصویر اصلی`);
+    assert.equal(primary[0].image_id, target, `گام ${step + 1}: همان تصویر خواسته‌شده`);
+    assert.equal(rows.length, 3, `گام ${step + 1}: هیچ تصویری گم نشود`);
+  }
+});
+
 test('حذف تصویر اصلی، کم‌ترین sort_order را جانشین می‌کند', async () => {
   const jar = await login();
   await upload(jar, productId, [{ buffer: await jpeg(800, 800) }, { buffer: await jpeg(810, 800) }]);

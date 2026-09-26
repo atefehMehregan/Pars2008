@@ -79,22 +79,52 @@ export function createProductImageRepository(db) {
   }
 
   /**
-   * تعیین تصویر اصلی — در یک دستور.
+   * تعیین تصویر اصلی — اول خاموش کردن قبلی، بعد روشن کردن تازه.
    *
-   * «is_primary = (image_id = $2)» هم قبلی را خاموش می‌کند و هم تازه را
-   * روشن، بدون اینکه لحظه‌ای دو ردیفِ اصلی وجود داشته باشد. روی
-   * PostgreSQL آزموده شده است که این کار ایندکس یکتای جزئی را نقض
-   * نمی‌کند.
+   * چرا دو دستور و نه یکی؟
+   *
+   *   شکل قبلی یک دستور بود:
+   *     UPDATE … SET is_primary = (image_id = $2) WHERE product_id = $1
+   *   و *گاهی* کار می‌کرد. PostgreSQL یکتایی را حین اجرای دستور و ردیف
+   *   به ردیف می‌سنجد، نه در پایان آن؛ پس لحظه‌ای پیش می‌آید که هم ردیف
+   *   تازه و هم ردیف قبلی is_primary دارند و ایندکس جزئیِ
+   *   idx_product_images_one_primary با خطای 23505 رد می‌کند.
+   *
+   *   در عمل: نخستین جابه‌جایی روی ردیف‌های تازه‌درج‌شده رد می‌شد، و هر
+   *   جابه‌جایی بعدی شکست می‌خورد — یعنی «اصلی کردن» بار دوم به صفحهٔ
+   *   خطای ۵۰۰ می‌رسید.
+   *
+   *   قید DEFERRABLE این را حل می‌کرد، ولی ایندکسِ *جزئی* قابل تعویق
+   *   نیست (تعویق فقط برای قید جدول است، و UNIQUE … WHERE را نمی‌شود
+   *   به‌صورت قید نوشت). پس ترتیب را خودمان تضمین می‌کنیم: هیچ‌وقت دو
+   *   ردیف هم‌زمان اصلی نمی‌شوند.
+   *
+   * اتمی بودن: اگر اجراکننده تراکنش داشته باشد (لایهٔ تولید دارد) هر دو
+   * دستور در یک تراکنش می‌روند، پس هیچ پنجره‌ای نمی‌ماند که محصول
+   * بی‌تصویرِ اصلی بماند. PGlite یک اتصال دارد و ترتیب در آن تضمین است.
    *
    * @returns {Promise<boolean>} آیا تصویری با این شناسه بود؟
    */
   async function setPrimary(productId, imageId) {
     const exists = await findOne(productId, imageId);
     if (!exists) return false;
-    await db.query(
-      'UPDATE product_images SET is_primary = (image_id = $2) WHERE product_id = $1',
-      [productId, imageId]
-    );
+    /* از قبل اصلی است: کاری لازم نیست و هیچ ردیفی بازنویسی نمی‌شود. */
+    if (exists.is_primary === true) return true;
+
+    const clearSql = `UPDATE product_images SET is_primary = FALSE
+                       WHERE product_id = $1 AND is_primary AND image_id <> $2`;
+    const setSql = `UPDATE product_images SET is_primary = TRUE
+                     WHERE product_id = $1 AND image_id = $2`;
+
+    if (typeof db.withTransaction === 'function') {
+      await db.withTransaction(async (client) => {
+        await client.query(clearSql, [productId, imageId]);
+        await client.query(setSql, [productId, imageId]);
+      });
+    } else {
+      await db.query(clearSql, [productId, imageId]);
+      await db.query(setSql, [productId, imageId]);
+    }
     return true;
   }
 
